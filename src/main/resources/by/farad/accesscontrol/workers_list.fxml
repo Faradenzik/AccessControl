@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+
+<Pane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="by.farad.accesscontrol.controllers.WorkersListController">
+    <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity"
+                minWidth="-Infinity" prefHeight="900.0" prefWidth="1700.0" style="-fx-background-color: #2A363B;">
+        <left>
+          <TreeView prefHeight="900.0" prefWidth="237.0" style="-fx-background-color: #fecea8;"
+                    BorderPane.alignment="CENTER"/>
+        </left>
+        <right>
+          <VBox alignment="TOP_CENTER" prefHeight="900.0" prefWidth="289.0" style="-fx-background-color: #fecea8;"
+                BorderPane.alignment="CENTER"/>
+        </right>
+        <center>
+          <TableView fx:id="workersTable" minHeight="900.0" minWidth="600.0" prefHeight="900.0" prefWidth="1000.0"
+                     style="-fx-background-color: #2A363B;" tableMenuButtonVisible="true"
+                     BorderPane.alignment="CENTER">
+              <columns>
+                  <TableColumn fx:id="id" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="60.0"
+                               text="ID"/>
+                  <TableColumn fx:id="name" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0"
+                               text="Имя"/>
+                  <TableColumn fx:id="surname" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0"
+                               text="Фамилия"/>
+                  <TableColumn fx:id="patronomyc" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0"
+                               text="Отчество"/>
+                  <TableColumn fx:id="sex" maxWidth="1.7976931348623157E308" minWidth="60.0" prefWidth="70.0"
+                               text="Пол"/>
+                  <TableColumn fx:id="birthday" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="120.0"
+                               text="Дата рождения"/>
+                  <TableColumn fx:id="position" maxWidth="1.7976931348623157E308" minWidth="120.0" prefWidth="130.0"
+                               text="Должность"/>
+                  <TableColumn fx:id="department" maxWidth="1.7976931348623157E308" minWidth="140.0" prefWidth="150.0"
+                               text="Отдел"/>
+              </columns>
+              <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+              </columnResizePolicy>
+          </TableView>
+        </center>
+    </BorderPane>
+</Pane>

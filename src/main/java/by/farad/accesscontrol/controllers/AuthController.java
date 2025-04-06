@@ -1,10 +1,17 @@
 package by.farad.accesscontrol.controllers;
 
+import by.farad.accesscontrol.models.Session;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class AuthController {
     @FXML
@@ -25,11 +32,31 @@ public class AuthController {
         String login = loginField.getText();
         String password = passwordField.getText();
 
-        // Вызов метода для авторизации через HTTP
-        boolean isAuthenticated = HttpService.authenticate(login, password);
-
-        if (isAuthenticated) {
-            System.out.println("Авторизация успешна!");
+        String authenticatedUsername = HttpService.authenticate(login, password);
+        if (authenticatedUsername != null) {
+            Session.setCurrentUsername(authenticatedUsername);
+            openMainWindow();
         }
     }
+
+    private void openMainWindow() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/main_window.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Главное окно");
+            stage.setScene(new Scene(root));
+            stage.setResizable(false);
+            stage.show();
+
+            // Закрыть окно авторизации
+            Stage currentStage = (Stage) authButton.getScene().getWindow();
+            currentStage.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

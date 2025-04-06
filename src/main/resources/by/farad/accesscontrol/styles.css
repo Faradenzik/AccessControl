@@ -1,0 +1,35 @@
+.combo-box {
+    -fx-background-radius: 25 0 0 25;
+    -fx-border-radius: 25;
+}
+
+/* Для выпадающего списка */
+.combo-box-popup .list-view {
+    -fx-background-radius: 0 0 25 25;
+}
+
+/* Для редактируемого текстового поля */
+.combo-box .text-field {
+    -fx-background-radius: 25 0 0 25;
+}
+
+.combo-box .text-field {
+    -fx-font-size: 24px;
+    -fx-font-family: "JejuGothic";
+}
+
+/* Обычный стиль для кнопки */
+.hover-button {
+    -fx-background-color: #FF847C;
+}
+
+/* Стиль для кнопки при наведении мыши */
+.hover-button:hover {
+    -fx-background-color: #FF6F61;  /* Например, темный оттенок */
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.09), 60, 5, 0, 0);
+}
+
+.hover-button:pressed {
+    -fx-scale-x: 0.95;  /* Уменьшаем кнопку по горизонтали */
+    -fx-scale-y: 0.95;  /* Уменьшаем кнопку по вертикали */
+}
