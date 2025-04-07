@@ -2,6 +2,7 @@ package by.farad.accesscontrol.controllers;
 
 import by.farad.accesscontrol.models.Session;
 import by.farad.accesscontrol.services.HttpService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,11 +33,15 @@ public class AuthController {
         String login = loginField.getText();
         String password = passwordField.getText();
 
-        String authenticatedUsername = HttpService.authenticate(login, password);
-        if (authenticatedUsername != null) {
-            Session.setCurrentUsername(authenticatedUsername);
-            openMainWindow();
-        }
+        HttpService.authenticateAsync(login, password)
+                .thenAccept(username -> {
+                    if (username != null) {
+                        Platform.runLater(() -> {
+                            Session.setCurrentUsername(username);
+                            openMainWindow();
+                        });
+                    }
+                });
     }
 
     private void openMainWindow() {

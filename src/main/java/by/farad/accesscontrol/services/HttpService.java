@@ -2,94 +2,109 @@ package by.farad.accesscontrol.services;
 
 import by.farad.accesscontrol.models.Worker;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class HttpService {
+    private static final HttpClient client = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
-    public static class ObjectMapperSingleton {
-        private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String BASE_URL = "http://localhost:8080";
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private static String authToken;
 
-        private ObjectMapperSingleton() {}
+    private HttpService() {}
 
-        public static ObjectMapper getObjectMapper() {
-            return objectMapper;
-        }
+    public static CompletableFuture<String> authenticateAsync(String login, String password) {
+        String json = String.format("{\"login\": \"%s\", \"password\": \"%s\"}", login, password);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/auth/login"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        // Сохраняем базовую авторизацию для последующих запросов
+                        authToken = Base64.getEncoder()
+                                .encodeToString((login + ":" + password).getBytes());
+                        return login;
+                    } else if (response.statusCode() == 401) {
+                        showAlert("Ошибка", "Неверный логин или пароль");
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.body());
+                    }
+                    return null;
+                });
     }
 
-    private static final String BASE_URL = "http://localhost:8080"; // Адрес сервера
-
-    public static String authenticate(String login, String password) {
-        try {
-            URL url = new URL(BASE_URL + "/login");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
-
-            String jsonInputString = "{\"login\": \"" + login + "\", \"password\": \"" + password + "\"}";
-
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-
-            int responseCode = connection.getResponseCode();
-            InputStream is = (responseCode < 400) ? connection.getInputStream() : connection.getErrorStream();
-            String response = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                return login;
-            } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                showAlert("Ошибка", "Неверный логин или пароль");
-            } else {
-                showAlert("Ошибка", "Ошибка на сервере: " + response);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Ошибка подключения", "Не удалось подключиться к серверу.");
+    public static CompletableFuture<List<Worker>> getWorkersAsync() {
+        if (authToken == null) {
+            showAlert("Ошибка", "Требуется авторизация");
+            return CompletableFuture.completedFuture(null);
         }
-        return null;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/workers"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Basic " + authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, Worker.class)
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
+                });
     }
 
-    public static List<Worker> getWorkers() {
-        try {
-            URL url = new URL(BASE_URL + "/workers");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            int responseCode = connection.getResponseCode();
-            InputStream is = (responseCode < 400) ? connection.getInputStream() : connection.getErrorStream();
-            String response = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                ObjectMapper objectMapper = ObjectMapperSingleton.getObjectMapper();
-                return objectMapper.readValue(response, objectMapper.getTypeFactory().constructCollectionType(List.class, Worker.class));
-            } else {
-                showAlert("Ошибка", "Ошибка на сервере: " + response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Ошибка подключения", "Не удалось подключиться к серверу.");
-        }
-        return null;
+    private static CompletableFuture<HttpResponse<String>> sendRequestAsync(HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .exceptionally(ex -> {
+                    ex.printStackTrace();
+                    showAlert("Ошибка подключения", "Не удалось подключиться к серверу: " + ex.getMessage());
+                    return null;
+                });
     }
-
 
     private static void showAlert(String title, String message) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        javafx.application.Platform.runLater(() -> {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

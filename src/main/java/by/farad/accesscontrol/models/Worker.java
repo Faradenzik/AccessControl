@@ -1,91 +1,100 @@
 package by.farad.accesscontrol.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import javafx.beans.property.*;
+
+import java.time.LocalDate;
+
 public class Worker {
-    private int id;
-    private String name;
-    private String surname;
-    private String patronomyc;
-    private String sex;
-    private String birthday;
-    private String position;
-    private String department;
+    private final LongProperty id = new SimpleLongProperty();
+    private final StringProperty name = new SimpleStringProperty();
+    private final StringProperty surname = new SimpleStringProperty();
+    private final StringProperty patronomic = new SimpleStringProperty();
+    private final StringProperty sex = new SimpleStringProperty();
+    private final ObjectProperty<LocalDate> birthday = new SimpleObjectProperty<>();
+    private final StringProperty phone = new SimpleStringProperty();
+    private final StringProperty position = new SimpleStringProperty();
+    private final StringProperty otdel = new SimpleStringProperty();
+    private final StringProperty department = new SimpleStringProperty();
 
-    public Worker () {
-
+    public Worker() {
+        // Пустой конструктор для Jackson
     }
 
-    public Worker (int id, String name, String surname, String patronomyc, String sex, String birthday, String position, String department) {
-        this.id = id;
-        this.name = name;
-        this.surname = surname;
-        this.patronomyc = patronomyc;
-        this.sex = sex;
-        this.birthday = birthday;
-        this.position = position;
-        this.department = department;
+    public Worker(long id, String name, String surname, String patronomic,
+                  String sex, LocalDate birthday, String phone,
+                  String position, String otdel, String department) {
+        this.id.set(id);
+        this.name.set(name);
+        this.surname.set(surname);
+        this.patronomic.set(patronomic);
+        this.sex.set(sex);
+        this.birthday.set(birthday);
+        this.phone.set(phone);
+        this.position.set(position);
+        this.otdel.set(otdel);
+        this.department.set(department);
     }
 
-    public int getId() {
-        return id;
-    }
+    // Геттеры для свойств (Property)
+    public LongProperty idProperty() { return id; }
+    public StringProperty nameProperty() { return name; }
+    public StringProperty surnameProperty() { return surname; }
+    public StringProperty patronomicProperty() { return patronomic; }
+    public StringProperty sexProperty() { return sex; }
+    public ObjectProperty<LocalDate> birthdayProperty() { return birthday; }
+    public StringProperty phoneProperty() { return phone; }
+    public StringProperty positionProperty() { return position; }
+    public StringProperty otdelProperty() { return otdel; }
+    public StringProperty departmentProperty() { return department; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    // Стандартные геттеры (для JSON)
+    @JsonProperty("id")
+    public long getId() { return id.get(); }
 
-    public String getName() {
-        return name;
-    }
+    @JsonProperty("name")
+    public String getName() { return name.get(); }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @JsonProperty("surname")
+    public String getSurname() { return surname.get(); }
 
-    public String getSurname() {
-        return surname;
-    }
+    @JsonProperty("patronomic")
+    public String getPatronomic() { return patronomic.get(); }
 
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
+    @JsonProperty("sex")
+    public String getSex() { return sex.get(); }
 
-    public String getPatronomyc() {
-        return patronomyc;
-    }
+    @JsonProperty("birthday")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    public LocalDate getBirthday() { return birthday.get(); }
 
-    public void setPatronomyc(String patronomyc) {
-        this.patronomyc = patronomyc;
-    }
+    @JsonProperty("phone")
+    public String getPhone() { return phone.get(); }
 
-    public String getSex() {
-        return sex;
-    }
+    @JsonProperty("position")
+    public String getPosition() { return position.get(); }
 
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
+    @JsonProperty("otdel")
+    public String getOtdel() { return otdel.get(); }
 
-    public String getBirthday() {
-        return birthday;
-    }
+    @JsonProperty("department")
+    public String getDepartment() { return department.get(); }
 
-    public void setBirthday(String birthday) {
-        this.birthday = birthday;
-    }
+    // Сеттеры
+    public void setId(long id) { this.id.set(id); }
+    public void setName(String name) { this.name.set(name); }
+    public void setSurname(String surname) { this.surname.set(surname); }
+    public void setPatronomic(String patronomic) { this.patronomic.set(patronomic); }
+    public void setSex(String sex) { this.sex.set(sex); }
+    public void setBirthday(LocalDate birthday) { this.birthday.set(birthday); }
+    public void setPhone(String phone) { this.phone.set(phone); }
+    public void setPosition(String position) { this.position.set(position); }
+    public void setOtdel(String otdel) { this.otdel.set(otdel); }
+    public void setDepartment(String department) { this.department.set(department); }
 
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
+    @Override
+    public String toString() {
+        return String.format("%s %s %s (%s)", getSurname(), getName(), getPatronomic(), getPosition());
     }
 }

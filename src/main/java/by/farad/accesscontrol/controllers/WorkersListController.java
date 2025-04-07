@@ -2,22 +2,36 @@ package by.farad.accesscontrol.controllers;
 
 import by.farad.accesscontrol.models.Worker;
 import by.farad.accesscontrol.services.HttpService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.util.List;
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.*;
 
-public class WorkersListController {
+public class WorkersListController implements Initializable {
+
+    @FXML
+    public TreeView<String> treeView;
+    @FXML
+    public TableColumn<Worker, String> phone;
+
+    @FXML
+    public TableColumn<Worker, String> otdel;
 
     @FXML
     private TableView<Worker> workersTable;
 
     @FXML
-    private TableColumn<Worker, Long> id;
+    private TableColumn<Worker, Number> id;
 
     @FXML
     private TableColumn<Worker, String> name;
@@ -26,13 +40,13 @@ public class WorkersListController {
     private TableColumn<Worker, String> surname;
 
     @FXML
-    private TableColumn<Worker, String> patronomyc;
+    private TableColumn<Worker, String> patronomic;
 
     @FXML
     private TableColumn<Worker, String> sex;
 
     @FXML
-    private TableColumn<Worker, String> birthday;
+    private TableColumn<Worker, LocalDate> birthday;
 
     @FXML
     private TableColumn<Worker, String> position;
@@ -40,21 +54,93 @@ public class WorkersListController {
     @FXML
     private TableColumn<Worker, String> department;
 
-    @FXML
-    public void initialize() {
+    private final ObservableList<Worker> workersData = FXCollections.observableArrayList();
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // Настройка привязки столбцов к свойствам модели Worker
         id.setCellValueFactory(new PropertyValueFactory<>("id"));
         name.setCellValueFactory(new PropertyValueFactory<>("name"));
         surname.setCellValueFactory(new PropertyValueFactory<>("surname"));
-        patronomyc.setCellValueFactory(new PropertyValueFactory<>("patronomyc"));
+        patronomic.setCellValueFactory(new PropertyValueFactory<>("patronomic"));
         sex.setCellValueFactory(new PropertyValueFactory<>("sex"));
         birthday.setCellValueFactory(new PropertyValueFactory<>("birthday"));
+        phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         position.setCellValueFactory(new PropertyValueFactory<>("position"));
+        otdel.setCellValueFactory(new PropertyValueFactory<>("otdel"));
         department.setCellValueFactory(new PropertyValueFactory<>("department"));
 
-        List<Worker> workers = HttpService.getWorkers();
-        if (workers != null) {
-            ObservableList<Worker> workersList = FXCollections.observableArrayList(workers);
-            workersTable.setItems(workersList);
+        workersTable.setItems(workersData);
+
+        loadWorkersData();
+        setupTreeViewListener();
+    }
+
+    private void loadWorkersData() {
+        HttpService.getWorkersAsync().thenAccept(workers -> {
+            if (workers != null) {
+                Platform.runLater(() -> {
+                    workersData.clear();
+                    workersData.addAll(workers);
+                    buildTreeFromWorkers(workers); // строим дерево
+                });
+            }
+        });
+    }
+
+    private void buildTreeFromWorkers(List<Worker> workers) {
+        Map<String, Set<String>> departmentMap = new HashMap<>();
+
+        for (Worker worker : workers) {
+            String dep = worker.getDepartment();
+            String otdel = worker.getOtdel();
+
+            departmentMap.putIfAbsent(dep, new HashSet<>());
+            if (otdel != null && !otdel.isBlank()) {
+                departmentMap.get(dep).add(otdel);
+            }
         }
+
+        TreeItem<String> rootItem = new TreeItem<>("Все сотрудники");
+        rootItem.setExpanded(true);
+
+        for (Map.Entry<String, Set<String>> entry : departmentMap.entrySet()) {
+            TreeItem<String> depItem = new TreeItem<>(entry.getKey());
+            for (String otdel : entry.getValue()) {
+                TreeItem<String> otdelItem = new TreeItem<>(otdel);
+                depItem.getChildren().add(otdelItem);
+            }
+            rootItem.getChildren().add(depItem);
+        }
+
+        treeView.setRoot(rootItem);
+    }
+
+    private void setupTreeViewListener() {
+        treeView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                String selected = newVal.getValue();
+                TreeItem<String> parent = newVal.getParent();
+
+                if (parent == null) {
+                    workersTable.setItems(workersData);
+                } else if (parent.getValue().equals("Все сотрудники")) {
+                    filterTableByDepartment(selected);
+                } else {
+                    filterTableByDepartmentAndOtdel(parent.getValue(), selected);
+                }
+            }
+        });
+    }
+
+    private void filterTableByDepartment(String departmentName) {
+        ObservableList<Worker> filtered = workersData.filtered(w -> w.getDepartment().equals(departmentName));
+        workersTable.setItems(filtered);
+    }
+
+    private void filterTableByDepartmentAndOtdel(String department, String otdel) {
+        ObservableList<Worker> filtered = workersData.filtered(w ->
+                w.getDepartment().equals(department) && w.getOtdel().equals(otdel));
+        workersTable.setItems(filtered);
     }
 }
