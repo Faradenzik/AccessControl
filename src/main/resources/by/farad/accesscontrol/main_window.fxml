@@ -9,28 +9,30 @@
 
 <BorderPane style="-fx-background-color: #2A363B;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.MainWindowController">
    <left>
-       <VBox maxWidth="-Infinity" prefHeight="900.0" prefWidth="100.0" style="-fx-background-color: #FF847C;"
-             stylesheets="@styles.css" BorderPane.alignment="CENTER">
-           <Button fx:id="main_journal_btn" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
-                   minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#showMainJournal"
-                   prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #FF847C;"
-                   styleClass="hover-button">
+       <VBox maxWidth="-Infinity" prefHeight="900.0" prefWidth="100.0" style="-fx-background-color: #FF847C;" stylesheets="@styles.css" BorderPane.alignment="CENTER">
+           <Button fx:id="main_journal_btn" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#showMainJournal" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #FF847C;" styleClass="hover-button">
                <graphic>
                    <ImageView fitHeight="75.0" fitWidth="75.0" preserveRatio="true">
-                       <Image url="@../../../icons/main_journal.png"/>
+                       <Image url="@../../../icons/main_journal.png" />
                    </ImageView>
                </graphic>
            </Button>
-           <Button fx:id="workers_list_btn" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
-                   minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#showWorkersList"
-                   prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #FF847C;"
-                   styleClass="hover-button">
+           <Button fx:id="workers_list_btn" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#showWorkersList" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #FF847C;" styleClass="hover-button">
               <graphic>
                   <ImageView fitHeight="75.0" fitWidth="75.0" preserveRatio="true">
-                      <Image url="@../../../icons/workers_list.png"/>
+                      <Image url="@../../../icons/workers_list.png" />
                   </ImageView>
               </graphic>
            </Button>
+         <Button fx:id="logout_btn" contentDisplay="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#logout" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #FF847C;" styleClass="hover-button">
+            <graphic>
+               <ImageView fitHeight="75.0" fitWidth="75.0" preserveRatio="true">
+                  <image>
+                     <Image url="@../../../icons/logout.png" />
+                  </image>
+               </ImageView>
+            </graphic>
+         </Button>
        </VBox>
    </left>
    <right>

@@ -1,6 +1,5 @@
 package by.farad.accesscontrol.controllers;
 
-import by.farad.accesscontrol.models.Session;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -17,10 +16,8 @@ import java.io.IOException;
 public class AuthController {
     @FXML
     private TextField loginField;
-
     @FXML
     private PasswordField passwordField;
-
     @FXML
     private Button authButton;
 
@@ -36,28 +33,28 @@ public class AuthController {
         HttpService.authenticateAsync(login, password)
                 .thenAccept(username -> {
                     if (username != null) {
-                        Platform.runLater(() -> {
-                            Session.setCurrentUsername(username);
-                            openMainWindow();
-                        });
+                        Platform.runLater(() -> openMainWindow(username));
                     }
                 });
     }
 
-    private void openMainWindow() {
+    private void openMainWindow(String username) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/main_window.fxml"));
             Parent root = loader.load();
 
+            MainWindowController mainController = loader.getController();
+            mainController.setCurrentUser(username);
+
             Stage stage = new Stage();
-            stage.setTitle("Главное окно");
+            stage.setTitle("Access Control System: " + username);
             stage.setScene(new Scene(root));
             stage.setResizable(false);
-            stage.show();
 
-            // Закрыть окно авторизации
             Stage currentStage = (Stage) authButton.getScene().getWindow();
             currentStage.close();
+
+            stage.show();
 
         } catch (IOException e) {
             e.printStackTrace();
