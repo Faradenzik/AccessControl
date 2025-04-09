@@ -5,6 +5,7 @@ import by.farad.accesscontrol.services.HttpService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import lombok.Setter;
 
 import java.util.Optional;
 
@@ -26,20 +27,14 @@ public class WorkerEditController {
     @FXML private Button deleteButton;
 
     private Worker worker;
+    @Setter
     private Runnable refreshCallback;
+    @Setter
     private Stage stage;
 
     public void setWorker(Worker worker) {
         this.worker = worker;
         fillForm();
-    }
-
-    public void setRefreshCallback(Runnable refreshCallback) {
-        this.refreshCallback = refreshCallback;
-    }
-
-    public void setStage(Stage stage) {
-        this.stage = stage;
     }
 
     @FXML

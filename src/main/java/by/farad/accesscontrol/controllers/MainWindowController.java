@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class MainWindowController {
-
-    private String currentUsername;
-
     @FXML
     private Pane rightPane;
 
@@ -36,16 +33,13 @@ public class MainWindowController {
                 try {
                     logout();
                 } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             });
         });
     }
 
-    public void setCurrentUser(String username) {
-        this.currentUsername = username;
-    }
-
+    // Показать журнал
     public void showMainJournal() {
         try {
             Pane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
@@ -55,6 +49,7 @@ public class MainWindowController {
         }
     }
 
+    // Показать список сотрудников
     public void showWorkersList() {
         try {
             Pane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers_list.fxml")));
@@ -65,11 +60,13 @@ public class MainWindowController {
     }
 
     public void logout() throws IOException, InterruptedException {
-        HttpService.logout(currentUsername);
+        HttpService.logout();
 
         Stage currentStage = (Stage) rightPane.getScene().getWindow();
         currentStage.close();
+
         Stage stage = new Stage();
         Main.openAuthWindow(stage);
+
     }
 }

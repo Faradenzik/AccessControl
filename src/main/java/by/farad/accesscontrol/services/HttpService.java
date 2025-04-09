@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,10 +26,10 @@ public class HttpService {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static String authToken;
-    private static String currentUsername;
 
     private HttpService() {}
 
+    // Метод для авторизации, сохранение токена
     public static CompletableFuture<String> authenticateAsync(String login, String password) {
         String json = String.format("{\"login\": \"%s\", \"password\": \"%s\"}", login, password);
 
@@ -43,36 +42,43 @@ public class HttpService {
         return sendRequestAsync(request)
                 .thenApply(response -> {
                     if (response.statusCode() == 200) {
-                        currentUsername = login; // Сохраняем имя пользователя
-                        return login;
+                        try {
+                            authToken = response.body();
+                            return login;
+                        } catch (Exception e) {
+                            showAlert("Ошибка", "Ошибка при получении токена.");
+                        }
                     }
                     return null;
                 });
     }
 
-    public static void logout(String username) {
-        String json = String.format("{\"username\": \"%s\"}", username);
+    public static void logout() {
+        if (authToken != null) {
+            String json = "{}";
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/auth/logout"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/auth/logout"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)  // Передаем токен для выхода
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
 
-        try {
-            HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            try {
+                HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+                authToken = null;
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    // Получение списка работников
     public static CompletableFuture<List<Worker>> getWorkersAsync() {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/workers"))
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Basic " + authToken)
+                .header("X-Session-Token", authToken)  // Передаем токен для авторизации
                 .GET()
                 .timeout(Duration.ofSeconds(15))
                 .build();
@@ -96,23 +102,15 @@ public class HttpService {
                 });
     }
 
-    private static CompletableFuture<HttpResponse<String>> sendRequestAsync(HttpRequest request) {
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .exceptionally(ex -> {
-                    showAlert("Ошибка подключения", "Не удалось подключиться к серверу");
-                    return null;
-                });
-    }
-
+    // Обновление работника
     public static CompletableFuture<Boolean> updateWorker(Worker worker) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            String json = mapper.writeValueAsString(worker);
+            String json = objectMapper.writeValueAsString(worker);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(BASE_URL + "/workers/" + worker.getId()))
                     .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)  // Передаем токен
                     .PUT(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
@@ -124,9 +122,11 @@ public class HttpService {
         }
     }
 
+    // Удаление работника
     public static CompletableFuture<Boolean> deleteWorker(Long id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/workers/" + id))
+                .header("X-Session-Token", authToken)  // Передаем токен
                 .DELETE()
                 .build();
 
@@ -134,9 +134,19 @@ public class HttpService {
                 .thenApply(response -> response.statusCode() == 200);
     }
 
+    // Метод для отправки асинхронных запросов
+    private static CompletableFuture<HttpResponse<String>> sendRequestAsync(HttpRequest request) {
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .exceptionally(ex -> {
+                    showAlert("Ошибка подключения", "Не удалось подключиться к серверу");
+                    return null;
+                });
+    }
+
+    // Отображение сообщений об ошибках
     private static void showAlert(String title, String message) {
         javafx.application.Platform.runLater(() -> {
-            Alert alert = new Alert(AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle(title);
             alert.setHeaderText(null);
             alert.setContentText(message);

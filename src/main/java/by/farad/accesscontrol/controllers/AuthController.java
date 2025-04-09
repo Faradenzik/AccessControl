@@ -43,9 +43,6 @@ public class AuthController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/main_window.fxml"));
             Parent root = loader.load();
 
-            MainWindowController mainController = loader.getController();
-            mainController.setCurrentUser(username);
-
             Stage stage = new Stage();
             stage.setTitle("Access Control System: " + username);
             stage.setScene(new Scene(root));
