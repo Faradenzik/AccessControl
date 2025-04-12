@@ -114,8 +114,19 @@ public class HttpService {
                     .PUT(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
-            return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(response -> response.statusCode() == 100);
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null)
+                            return false;
+
+                        if (response.statusCode() == 200) {
+                            return true;
+                        } else {
+                            showAlert("Ошибка", "Не удалось обновить сотрудника. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return false;
+                        }
+                    });
         } catch (Exception e) {
             e.printStackTrace();
             return CompletableFuture.completedFuture(false);
@@ -126,12 +137,23 @@ public class HttpService {
     public static CompletableFuture<Boolean> deleteWorker(Long id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/workers/" + id))
-                .header("X-Session-Token", authToken)  // Передаем токен
+                .header("X-Session-Token", authToken)
                 .DELETE()
                 .build();
 
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> response.statusCode() == 200);
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response == null)
+                        return false;
+
+                    if (response.statusCode() == 200) {
+                        return true;
+                    } else {
+                        showAlert("Ошибка", "Не удалось удалить сотрудника. Код ответа: " +
+                                response.statusCode() + "\n" + response.body());
+                        return false;
+                    }
+                });
     }
 
     // Метод для отправки асинхронных запросов

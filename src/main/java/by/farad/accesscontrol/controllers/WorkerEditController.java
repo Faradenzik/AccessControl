@@ -2,6 +2,7 @@ package by.farad.accesscontrol.controllers;
 
 import by.farad.accesscontrol.models.Worker;
 import by.farad.accesscontrol.services.HttpService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -74,12 +75,12 @@ public class WorkerEditController {
 
         HttpService.updateWorker(worker).thenAccept(success -> {
             if (success) {
-                if (refreshCallback != null) {
-                    refreshCallback.run();
-                }
-                stage.close();
-            } else {
-                showAlert("Ошибка", "Не удалось сохранить изменения");
+                Platform.runLater(() -> {
+                    if (refreshCallback != null) {
+                        refreshCallback.run();
+                    }
+                    stage.close();
+                });
             }
         });
     }
@@ -94,12 +95,12 @@ public class WorkerEditController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             HttpService.deleteWorker(worker.getId()).thenAccept(success -> {
                 if (success) {
-                    if (refreshCallback != null) {
-                        refreshCallback.run();
-                    }
-                    stage.close();
-                } else {
-                    showAlert("Ошибка", "Не удалось удалить сотрудника");
+                    Platform.runLater(() -> {
+                        if (refreshCallback != null) {
+                            refreshCallback.run();
+                        }
+                        stage.close();
+                    });
                 }
             });
         }
