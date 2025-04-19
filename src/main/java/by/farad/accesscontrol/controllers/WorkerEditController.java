@@ -12,11 +12,9 @@ import java.util.Optional;
 
 public class WorkerEditController {
 
-    @FXML
-    private TextField idField;
     @FXML private TextField nameField;
     @FXML private TextField surnameField;
-    @FXML private TextField patronomicField;
+    @FXML private TextField patronymicField;
     @FXML private ComboBox<String> sexComboBox;
     @FXML private DatePicker birthdayPicker;
     @FXML private TextField phoneField;
@@ -49,10 +47,9 @@ public class WorkerEditController {
 
     private void fillForm() {
         if (worker != null) {
-            idField.setText(String.valueOf(worker.getId()));
             nameField.setText(worker.getName());
             surnameField.setText(worker.getSurname());
-            patronomicField.setText(worker.getPatronomic());
+            patronymicField.setText(worker.getPatronymic());
             sexComboBox.setValue(worker.getSex());
             birthdayPicker.setValue(worker.getBirthday());
             phoneField.setText(worker.getPhone());
@@ -62,10 +59,11 @@ public class WorkerEditController {
         }
     }
 
+    @FXML
     private void saveWorker() {
         worker.setName(nameField.getText());
         worker.setSurname(surnameField.getText());
-        worker.setPatronomic(patronomicField.getText());
+        worker.setPatronymic(patronymicField.getText());
         worker.setSex(sexComboBox.getValue());
         worker.setBirthday(birthdayPicker.getValue());
         worker.setPhone(phoneField.getText());
@@ -85,11 +83,12 @@ public class WorkerEditController {
         });
     }
 
+    @FXML
     private void deleteWorker() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Подтверждение удаления");
         alert.setHeaderText("Вы уверены, что хотите удалить сотрудника?");
-        alert.setContentText(worker.getSurname() + " " + worker.getName() + " " + worker.getPatronomic());
+        alert.setContentText(worker.getSurname() + " " + worker.getName() + " " + worker.getPatronymic());
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -106,11 +105,15 @@ public class WorkerEditController {
         }
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    public void editAccess() {
+
+    }
+
+    public void saveAccess() {
+
+    }
+
+    public void uploadPhoto() {
+
     }
 }

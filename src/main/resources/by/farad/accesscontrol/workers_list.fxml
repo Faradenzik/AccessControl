@@ -21,7 +21,7 @@
                   <TableColumn fx:id="id" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="60.0" text="ID" />
                   <TableColumn fx:id="name" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0" text="Имя" />
                   <TableColumn fx:id="surname" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0" text="Фамилия" />
-                  <TableColumn fx:id="patronomic" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0" text="Отчество" />
+                  <TableColumn fx:id="patronymic" maxWidth="1.7976931348623157E308" minWidth="90.0" prefWidth="100.0" text="Отчество" />
                   <TableColumn fx:id="sex" maxWidth="1.7976931348623157E308" minWidth="60.0" prefWidth="70.0" text="Пол" />
                   <TableColumn fx:id="birthday" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="120.0" text="Дата рождения" />
                   <TableColumn fx:id="phone" maxWidth="1.7976931348623157E308" minWidth="120.0" prefWidth="130.0" text="Телефон" />

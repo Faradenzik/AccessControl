@@ -42,7 +42,7 @@ public class WorkersListController implements Initializable {
     private TableColumn<Worker, String> surname;
 
     @FXML
-    private TableColumn<Worker, String> patronomic;
+    private TableColumn<Worker, String> patronymic;
 
     @FXML
     private TableColumn<Worker, String> sex;
@@ -74,7 +74,7 @@ public class WorkersListController implements Initializable {
         id.setCellValueFactory(new PropertyValueFactory<>("id"));
         name.setCellValueFactory(new PropertyValueFactory<>("name"));
         surname.setCellValueFactory(new PropertyValueFactory<>("surname"));
-        patronomic.setCellValueFactory(new PropertyValueFactory<>("patronomic"));
+        patronymic.setCellValueFactory(new PropertyValueFactory<>("patronymic"));
         sex.setCellValueFactory(new PropertyValueFactory<>("sex"));
         birthday.setCellValueFactory(new PropertyValueFactory<>("birthday"));
         phone.setCellValueFactory(new PropertyValueFactory<>("phone"));
