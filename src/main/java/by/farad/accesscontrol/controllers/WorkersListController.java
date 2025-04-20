@@ -107,8 +107,8 @@ public class WorkersListController implements Initializable {
         }
     }
 
-    private void loadWorkersData() {
-        HttpService.getWorkersAsync().thenAccept(workers -> {
+    public void loadWorkersData() {
+        HttpService.getAllWorkers().thenAccept(workers -> {
             if (workers != null) {
                 Platform.runLater(() -> {
                     workersData.clear();

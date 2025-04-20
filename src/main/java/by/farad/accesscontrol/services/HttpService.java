@@ -1,6 +1,8 @@
 package by.farad.accesscontrol.services;
 
+import by.farad.accesscontrol.models.Room;
 import by.farad.accesscontrol.models.Worker;
+import by.farad.accesscontrol.models.WorkerRoomPair;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -13,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpService {
@@ -27,7 +30,9 @@ public class HttpService {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static String authToken;
 
-    private HttpService() {}
+    private HttpService() {
+
+    }
 
     // Метод для авторизации, сохранение токена
     public static CompletableFuture<String> authenticateAsync(String login, String password) {
@@ -74,7 +79,7 @@ public class HttpService {
     }
 
     // Получение списка работников
-    public static CompletableFuture<List<Worker>> getWorkersAsync() {
+    public static CompletableFuture<List<Worker>> getAllWorkers() {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/workers"))
                 .header("Content-Type", "application/json")
@@ -154,6 +159,92 @@ public class HttpService {
                         return false;
                     }
                 });
+    }
+
+    public static CompletableFuture<List<Room>> getAllRooms() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/rooms"))
+                .header("Content-Type", "application/json")
+                .header("X-Session-Token", authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, Room.class)
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<List<WorkerRoomPair>> getAccessibleRooms(Long worker_id) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/accesses/" + worker_id + "/rooms"))
+                .header("Content-Type", "application/json")
+                .header("X-Session-Token", authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, WorkerRoomPair.class)
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<Boolean> setRoomsToWorker(Set<Long> rooms, Long worker_id) {
+        try {
+            String json = objectMapper.writeValueAsString(rooms);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/accesses/" + worker_id))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)  // Передаем токен
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null)
+                            return false;
+
+                        if (response.statusCode() == 200) {
+                            return true;
+                        } else {
+                            showAlert("Ошибка", "Не удалось обновить доступные помещения. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return false;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
+        }
     }
 
     // Метод для отправки асинхронных запросов
