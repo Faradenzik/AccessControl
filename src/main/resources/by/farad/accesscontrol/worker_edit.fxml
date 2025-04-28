@@ -15,9 +15,9 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="570.0" prefWidth="780.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.WorkerEditController">
+<BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.WorkerEditController">
    <center>
-      <VBox fillWidth="false" spacing="15.0" style="-fx-padding: 20;" BorderPane.alignment="TOP_LEFT">
+      <VBox fillWidth="false" spacing="15.0" style="-fx-padding: 20;" BorderPane.alignment="TOP_RIGHT">
           <GridPane hgap="10.0" vgap="5.0">
               <columnConstraints>
                   <ColumnConstraints hgrow="SOMETIMES" />
@@ -95,7 +95,7 @@
                   <RowConstraints vgrow="SOMETIMES" />
                   <RowConstraints valignment="CENTER" />
               </rowConstraints>
-              <TreeView fx:id="availableRoomsTree" GridPane.rowIndex="1" />
+              <TreeView fx:id="availableRoomsTree" prefHeight="165.0" prefWidth="250.0" GridPane.rowIndex="1" />
               <Label text="Доступные помещения" />
             <Button mnemonicParsing="false" onAction="#editAccess" text="Настроить доступ" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <Button fx:id="saveAccessBtn" mnemonicParsing="false" onAction="#saveAccess" text="Применить" visible="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
@@ -103,7 +103,7 @@
       </VBox>
    </center>
    <left>
-       <VBox alignment="TOP_CENTER" spacing="10.0" BorderPane.alignment="TOP_CENTER">
+       <VBox alignment="TOP_CENTER" spacing="10.0" BorderPane.alignment="TOP_LEFT">
            <ImageView fx:id="photoView" fitHeight="200.0" fitWidth="200.0" preserveRatio="true" />
            <Button fx:id="uploadPhoto" alignment="CENTER" mnemonicParsing="false" onAction="#uploadPhoto" text="Загрузить фото" />
        </VBox>
@@ -113,10 +113,10 @@
    </padding>
    <bottom>
    
-          <HBox alignment="CENTER_RIGHT" spacing="10" BorderPane.alignment="CENTER">
-           <Button fx:id="deleteButton" onAction="#deleteWorker" prefWidth="80.0" style="-fx-background-color: #ff4444; -fx-text-fill: white;" text="Удалить" />
-           <Button fx:id="cancelButton" cancelButton="true" prefWidth="80.0" text="Отмена" />
-           <Button fx:id="saveButton" defaultButton="true" onAction="#saveWorker" prefWidth="80.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Сохранить">
+          <HBox alignment="CENTER_RIGHT" spacing="10" BorderPane.alignment="BOTTOM_RIGHT">
+           <Button fx:id="deleteButton" onAction="#deleteWorker" prefWidth="90.0" style="-fx-background-color: #ff4444; -fx-text-fill: white;" text="Удалить" />
+           <Button fx:id="cancelButton" cancelButton="true" prefWidth="90.0" text="Отмена" />
+           <Button fx:id="saveButton" defaultButton="true" onAction="#saveWorker" prefWidth="90.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Сохранить">
             <HBox.margin>
                <Insets />
             </HBox.margin>

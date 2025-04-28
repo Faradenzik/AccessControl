@@ -7,8 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javafx.scene.control.Alert;
+import javafx.scene.image.Image;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -237,6 +240,79 @@ public class HttpService {
                             return true;
                         } else {
                             showAlert("Ошибка", "Не удалось обновить доступные помещения. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return false;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    public static CompletableFuture<Image> getWorkerPhoto(String photo_path) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/workers/photo/" + photo_path))
+                .header("X-Session-Token", authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(20)) // Таймаут для загрузки фото может быть больше
+                .build();
+
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+                .thenApply(response -> {
+                    if (response == null) {
+                        return null;
+                    }
+
+                    if (response.statusCode() == 200) {
+                        try (InputStream imageStream = response.body()) {
+                            return new Image(imageStream);
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    } else if (response.statusCode() == 404) {
+                        System.out.println("Фото для работника не найдено");
+                        return null;
+                    } else {
+                        showAlert("Ошибка сервера", "Не удалось загрузить фото сотрудника. Код ответа: " +
+                                response.statusCode());
+                        try {
+                            String errorBody = new String(response.body().readAllBytes());
+                            System.err.println("Тело ошибки от сервера: " + errorBody);
+                        } catch (IOException ioException) {
+                        }
+                        return null;
+                    }
+                })
+                .exceptionally(ex -> {
+                    // Обработка исключений при отправке запроса (например, нет соединения)
+                    System.err.println("Ошибка сети при запросе фото" + ex.getMessage());
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<Boolean> uploadWorkerPhoto(Long workerId, File file) {
+        if (file == null || !file.exists()) {
+            showAlert("Ошибка", "Файл не найден или не выбран.");
+            return CompletableFuture.completedFuture(false);
+        }
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/workers/photo/" + workerId))
+                    .header("X-Session-Token", authToken)
+                    .header("Content-Type", "application/octet-stream") // указываем просто бинарный поток
+                    .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) return false;
+
+                        if (response.statusCode() == 200) {
+                            return true;
+                        } else {
+                            showAlert("Ошибка", "Не удалось загрузить фото. Код ответа: " +
                                     response.statusCode() + "\n" + response.body());
                             return false;
                         }

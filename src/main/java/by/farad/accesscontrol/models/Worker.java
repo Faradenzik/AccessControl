@@ -16,4 +16,5 @@ public class Worker {
     private String position;
     private String otdel;
     private String department;
+    private String photo_file;
 }

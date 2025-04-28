@@ -1,23 +1,29 @@
 package by.farad.accesscontrol.controllers;
 
 import by.farad.accesscontrol.models.Room;
-import by.farad.accesscontrol.models.RoomTreeItem;
 import by.farad.accesscontrol.models.Worker;
 import by.farad.accesscontrol.models.WorkerRoomPair;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class WorkerEditController {
 
+    @FXML private ImageView photoView;
     @FXML private TreeView<String> availableRoomsTree;
     @FXML private TextField nameField;
     @FXML private TextField surnameField;
@@ -33,6 +39,7 @@ public class WorkerEditController {
     @FXML private Button deleteButton;
     @FXML private Button saveAccessBtn;
 
+    private File selectedFile = null;
     private CompletableFuture<List<WorkerRoomPair>> accessibleFuture;
     private CompletableFuture<List<Room>> allRoomsFuture;
     private Set<Long> accessibleRoomIds = new HashSet<>();
@@ -48,7 +55,7 @@ public class WorkerEditController {
         this.worker = worker;
         fillForm();
         accessibleFuture = HttpService.getAccessibleRooms(worker.getId());
-        initializeRoomTree(worker.getId());
+        initializeRoomTree();
     }
 
     @FXML
@@ -60,7 +67,7 @@ public class WorkerEditController {
         deleteButton.setOnAction(event -> deleteWorker());
     }
 
-    public void initializeRoomTree(Long workerId) {
+    public void initializeRoomTree() {
         allRoomsFuture = HttpService.getAllRooms();
 
         accessibleFuture.thenCombine(allRoomsFuture, (accessibleRooms, allRooms) -> {
@@ -77,7 +84,7 @@ public class WorkerEditController {
         // Фильтрация комнат
         List<Room> roomsToShow = allRooms.stream()
                 .filter(room -> editMode || accessibleRoomIds.contains(room.getId()))
-                .collect(Collectors.toList());
+                .toList();
 
         // Создаем корневой элемент
         TreeItem<String> root = new TreeItem<>("Доступные помещения");
@@ -187,6 +194,14 @@ public class WorkerEditController {
             positionField.setText(worker.getPosition());
             otdelField.setText(worker.getOtdel());
             departmentField.setText(worker.getDepartment());
+            HttpService.getWorkerPhoto(worker.getPhoto_file())
+                    .thenAccept(loadedImage -> {
+                        Platform.runLater(() -> {
+                            if (loadedImage != null) {
+                                photoView.setImage(loadedImage);
+                            }
+                        });
+                    });
         }
     }
 
@@ -213,7 +228,13 @@ public class WorkerEditController {
                 });
             }
         });
-
+        if (selectedFile != null) {
+            HttpService.uploadWorkerPhoto(worker.getId(), selectedFile).thenAccept(uploadResult -> {
+                if (uploadResult) {
+                    System.out.println("загружено");
+                }
+            });
+        }
     }
 
     @FXML
@@ -240,6 +261,38 @@ public class WorkerEditController {
 
 
     public void uploadPhoto() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Выберите фотографию сотрудника");
 
+        // Устанавливаем фильтр для файлов (только JPG/JPEG)
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Изображения JPG", "*.jpg")
+        );
+
+        // Показываем диалог выбора файла
+        File selectedFile = fileChooser.showOpenDialog(stage);
+
+        if (selectedFile != null) {
+            try {
+                // Загружаем изображение из файла
+                InputStream stream = new FileInputStream(selectedFile);
+                Image image = new Image(stream);
+
+                photoView.setImage(image);
+
+                this.selectedFile = selectedFile;
+
+                stream.close();
+
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка");
+                alert.setHeaderText("Не удалось загрузить фотографию");
+                alert.setContentText(e.getMessage());
+                alert.showAndWait();
+
+                e.printStackTrace();
+            }
+        }
     }
 }

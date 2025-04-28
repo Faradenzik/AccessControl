@@ -46,7 +46,8 @@ public class AuthController {
             Stage stage = new Stage();
             stage.setTitle("Access Control System: " + username);
             stage.setScene(new Scene(root));
-            stage.setResizable(false);
+            stage.setResizable(true);
+            stage.setMaximized(true);
 
             Stage currentStage = (Stage) authButton.getScene().getWindow();
             currentStage.close();

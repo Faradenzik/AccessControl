@@ -5,6 +5,7 @@ import by.farad.accesscontrol.Main;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -14,14 +15,14 @@ import java.util.Objects;
 
 public class MainWindowController {
     @FXML
-    private Pane rightPane;
+    private AnchorPane rightPane;
 
     @FXML
     private void initialize() {
         Font.loadFont(getClass().getResourceAsStream("/fonts/jejugothic.ttf"), 14);
 
         try {
-            Pane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
+            AnchorPane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
             rightPane.getChildren().setAll(journalPane);
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,8 +43,8 @@ public class MainWindowController {
     // Показать журнал
     public void showMainJournal() {
         try {
-            Pane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
-            rightPane.getChildren().setAll(journalPane);
+            AnchorPane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
+            setContent(journalPane);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,8 +53,8 @@ public class MainWindowController {
     // Показать список сотрудников
     public void showWorkersList() {
         try {
-            Pane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers_list.fxml")));
-            rightPane.getChildren().setAll(workersPane);
+            AnchorPane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers_list.fxml")));
+            setContent(workersPane);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,5 +69,13 @@ public class MainWindowController {
         Stage stage = new Stage();
         Main.openAuthWindow(stage);
 
+    }
+
+    private void setContent(Pane content) {
+        AnchorPane.setTopAnchor(content, 0.0);
+        AnchorPane.setBottomAnchor(content, 0.0);
+        AnchorPane.setLeftAnchor(content, 0.0);
+        AnchorPane.setRightAnchor(content, 0.0);
+        rightPane.getChildren().setAll(content);
     }
 }
