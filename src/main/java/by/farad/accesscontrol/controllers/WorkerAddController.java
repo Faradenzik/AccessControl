@@ -2,7 +2,6 @@ package by.farad.accesscontrol.controllers;
 
 import by.farad.accesscontrol.models.Room;
 import by.farad.accesscontrol.models.Worker;
-import by.farad.accesscontrol.models.WorkerRoomPair;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -21,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class WorkerEditController {
+public class WorkerAddController {
 
     @FXML private ImageView photoView;
     @FXML private TreeView<String> availableRoomsTree;
@@ -36,11 +35,8 @@ public class WorkerEditController {
     @FXML private TextField departmentField;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
-    @FXML private Button deleteButton;
-    @FXML private Button saveAccessBtn;
 
     private File selectedFile = null;
-    private CompletableFuture<List<WorkerRoomPair>> accessibleFuture;
     private CompletableFuture<List<Room>> allRoomsFuture;
     private Set<Long> accessibleRoomIds = new HashSet<>();
     private Set<Long> currentlySelectedRoomIds = new HashSet<>();
@@ -51,10 +47,8 @@ public class WorkerEditController {
     @Setter
     private Stage stage;
 
-    public void setWorker(Worker worker) {
-        this.worker = worker;
-        fillForm();
-        accessibleFuture = HttpService.getAccessibleRooms(worker.getId());
+    public void setWorker() {
+        this.worker = new Worker();
         initializeRoomTree();
     }
 
@@ -64,26 +58,21 @@ public class WorkerEditController {
 
         saveButton.setOnAction(event -> saveWorker());
         cancelButton.setOnAction(event -> stage.close());
-        deleteButton.setOnAction(event -> deleteWorker());
     }
 
     public void initializeRoomTree() {
         allRoomsFuture = HttpService.getAllRooms();
-
-        accessibleFuture.thenCombine(allRoomsFuture, (accessibleRooms, allRooms) -> {
-            accessibleRoomIds = accessibleRooms.stream()
-                    .map(WorkerRoomPair::getRoom_id)
-                    .collect(Collectors.toSet());
-            currentlySelectedRoomIds = new HashSet<>(accessibleRoomIds);
-            buildRoomTree(allRooms, false);
-            return null;
+        allRoomsFuture.thenAccept(allRooms -> {
+            Platform.runLater(() -> {
+                buildRoomTree(allRooms);  // включаем режим редактирования
+            });
         });
     }
 
-    private void buildRoomTree(List<Room> allRooms, boolean editMode) {
+    private void buildRoomTree(List<Room> allRooms) {
         // Фильтрация комнат
         List<Room> roomsToShow = allRooms.stream()
-                .filter(room -> editMode || accessibleRoomIds.contains(room.getId()))
+                .filter(room -> true || accessibleRoomIds.contains(room.getId()))
                 .toList();
 
         // Создаем корневой элемент
@@ -104,7 +93,7 @@ public class WorkerEditController {
             rooms.forEach(room -> {
                 TreeItem<String> roomItem = new TreeItem<>(room.getName());
 
-                if (editMode) {
+                if (true) {
                     CheckBox checkBox = new CheckBox();
                     checkBox.setSelected(currentlySelectedRoomIds.contains(room.getId()));
                     checkBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
@@ -157,55 +146,6 @@ public class WorkerEditController {
     }
 
     @FXML
-    private void editAccess() {
-        allRoomsFuture.thenAccept(allRooms -> {
-            accessibleFuture.thenAccept(accessibleRooms -> {
-                Platform.runLater(() -> {
-                    saveAccessBtn.setVisible(true);
-                    buildRoomTree(allRooms, true);
-                });
-            });
-        });
-    }
-
-    @FXML
-    private void saveAccess() {
-        // Только локальное обновление без сохранения на сервер
-        accessibleRoomIds = new HashSet<>(currentlySelectedRoomIds);
-
-        allRoomsFuture.thenAccept(allRooms -> {
-            accessibleFuture.thenAccept(accessibleRooms -> {
-                Platform.runLater(() -> {
-                    saveAccessBtn.setVisible(false);
-                    buildRoomTree(allRooms, false);
-                });
-            });
-        });
-    }
-
-    private void fillForm() {
-        if (worker != null) {
-            nameField.setText(worker.getName());
-            surnameField.setText(worker.getSurname());
-            patronymicField.setText(worker.getPatronymic());
-            sexComboBox.setValue(worker.getSex());
-            birthdayPicker.setValue(worker.getBirthday());
-            phoneField.setText(worker.getPhone());
-            positionField.setText(worker.getPosition());
-            otdelField.setText(worker.getOtdel());
-            departmentField.setText(worker.getDepartment());
-            HttpService.getWorkerPhoto(worker.getPhoto_file())
-                    .thenAccept(loadedImage -> {
-                        Platform.runLater(() -> {
-                            if (loadedImage != null) {
-                                photoView.setImage(loadedImage);
-                            }
-                        });
-                    });
-        }
-    }
-
-    @FXML
     private void saveWorker() {
         worker.setName(nameField.getText());
         worker.setSurname(surnameField.getText());
@@ -216,49 +156,29 @@ public class WorkerEditController {
         worker.setPosition(positionField.getText());
         worker.setOtdel(otdelField.getText());
         worker.setDepartment(departmentField.getText());
+        accessibleRoomIds = new HashSet<>(currentlySelectedRoomIds);
 
-        HttpService.setRoomsToWorker(accessibleRoomIds, worker.getId());
-        HttpService.updateWorker(worker).thenAccept(success -> {
-            if (success) {
+        HttpService.addWorker(worker).thenAccept(workerId -> {
+            if (workerId != null) {
                 Platform.runLater(() -> {
                     if (refreshCallback != null) {
                         refreshCallback.run();
                     }
                     stage.close();
+                    if (!accessibleRoomIds.isEmpty()) {
+                        HttpService.setRoomsToWorker(accessibleRoomIds, workerId);
+                    }
+                    if (selectedFile != null) {
+                        HttpService.uploadWorkerPhoto(workerId, selectedFile).thenAccept(uploadResult -> {
+                            if (uploadResult) {
+                                System.out.println("загружено");
+                            }
+                        });
+                    }
                 });
             }
         });
-        if (selectedFile != null) {
-            HttpService.uploadWorkerPhoto(worker.getId(), selectedFile).thenAccept(uploadResult -> {
-                if (uploadResult) {
-                    System.out.println("загружено");
-                }
-            });
-        }
     }
-
-    @FXML
-    private void deleteWorker() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Подтверждение удаления");
-        alert.setHeaderText("Вы уверены, что хотите удалить сотрудника?");
-        alert.setContentText(worker.getSurname() + " " + worker.getName() + " " + worker.getPatronymic());
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            HttpService.deleteWorker(worker.getId()).thenAccept(success -> {
-                if (success) {
-                    Platform.runLater(() -> {
-                        if (refreshCallback != null) {
-                            refreshCallback.run();
-                        }
-                        stage.close();
-                    });
-                }
-            });
-        }
-    }
-
 
     public void uploadPhoto() {
         FileChooser fileChooser = new FileChooser();

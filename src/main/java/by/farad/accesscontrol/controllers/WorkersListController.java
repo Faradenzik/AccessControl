@@ -101,6 +101,7 @@ public class WorkersListController implements Initializable {
             stage.setScene(new Scene(root));
             controller.setStage(stage);
 
+            stage.setOnHidden(e -> loadWorkersData());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,5 +174,26 @@ public class WorkersListController implements Initializable {
         ObservableList<Worker> filtered = workersData.filtered(w ->
                 w.getDepartment().equals(department) && w.getOtdel().equals(otdel));
         workersTable.setItems(filtered);
+    }
+
+    @FXML
+    public void addWorker() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/worker_add.fxml"));
+            Parent root = loader.load();
+
+            WorkerAddController controller = loader.getController();
+            controller.setWorker();
+
+            Stage stage = new Stage();
+            stage.setTitle("Создание сотрудника");
+            stage.setScene(new Scene(root));
+            controller.setStage(stage);
+
+            stage.setOnHidden(e -> loadWorkersData());
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -141,6 +141,42 @@ public class HttpService {
         }
     }
 
+    public static CompletableFuture<Long> addWorker(Worker worker) {
+        try {
+            String json = objectMapper.writeValueAsString(worker);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/workers/"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (response.statusCode() == 200 || response.statusCode() == 201) {
+                            try {
+                                return Long.parseLong(response.body());
+                            } catch (NumberFormatException e) {
+                                showAlert("Ошибка", "Сервер вернул неверный ID работника.");
+                                return null;
+                            }
+                        } else {
+                            showAlert("Ошибка", "Не удалось добавить сотрудника. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
     // Удаление работника
     public static CompletableFuture<Boolean> deleteWorker(Long id) {
         HttpRequest request = HttpRequest.newBuilder()
@@ -280,6 +316,7 @@ public class HttpService {
                             String errorBody = new String(response.body().readAllBytes());
                             System.err.println("Тело ошибки от сервера: " + errorBody);
                         } catch (IOException ioException) {
+                            throw new RuntimeException(ioException);
                         }
                         return null;
                     }
