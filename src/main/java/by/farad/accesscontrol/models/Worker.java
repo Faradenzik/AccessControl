@@ -1,8 +1,11 @@
 package by.farad.accesscontrol.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import javafx.scene.image.Image;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class Worker {
@@ -15,6 +18,9 @@ public class Worker {
     private String phone;
     private String position;
     private String otdel;
-    private String department;
-    private String photo_file;
+    private String photoFile;
+    @JsonIgnore
+    private Image photo;
+    @JsonIgnore
+    private List<AccessGroup> groups;
 }

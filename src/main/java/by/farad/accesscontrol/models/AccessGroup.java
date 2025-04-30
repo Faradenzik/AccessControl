@@ -3,9 +3,7 @@ package by.farad.accesscontrol.models;
 import lombok.Data;
 
 @Data
-public class Room {
+public class AccessGroup {
     private Long id;
     private String name;
-    private Integer floor;
-    private String deviceId;
 }

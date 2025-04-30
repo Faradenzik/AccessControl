@@ -1,8 +1,8 @@
 package by.farad.accesscontrol.services;
 
+import by.farad.accesscontrol.models.AccessGroup;
 import by.farad.accesscontrol.models.Room;
 import by.farad.accesscontrol.models.Worker;
-import by.farad.accesscontrol.models.WorkerRoomPair;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -12,13 +12,16 @@ import javafx.scene.image.Image;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpService {
@@ -95,10 +98,27 @@ public class HttpService {
                 .thenApply(response -> {
                     if (response.statusCode() == 200) {
                         try {
-                            return objectMapper.readValue(
+                            // Получаем список работников без фотографий
+                            List<Worker> workers = objectMapper.readValue(
                                     response.body(),
                                     objectMapper.getTypeFactory().constructCollectionType(List.class, Worker.class)
                             );
+
+                            // Загружаем фото для каждого работника
+                            for (Worker worker : workers) {
+                                if (worker.getPhotoFile() != null && !worker.getPhotoFile().isEmpty()) {
+                                    String photoPath = worker.getPhotoFile();
+                                    CompletableFuture<Image> photoFuture = getWorkerPhoto(photoPath);
+                                    photoFuture.thenAccept(photo -> worker.setPhoto(photo));
+                                }
+                                CompletableFuture<List<AccessGroup>> groupsFuture = getWorkerGroups(worker.getId());
+                                groupsFuture.thenAccept(groups -> {
+                                    if (groups != null) {
+                                        worker.setGroups(groups);
+                                    }
+                                });
+                            }
+                            return workers;
                         } catch (Exception e) {
                             e.printStackTrace();
                             showAlert("Ошибка", "Ошибка при обработке данных.");
@@ -108,6 +128,82 @@ public class HttpService {
                     }
                     return null;
                 });
+    }
+
+    // Загрузка фото для работника
+    public static CompletableFuture<Image> getWorkerPhoto(String photoPath) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/workers/photo/" + photoPath))
+                .header("X-Session-Token", authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(20)) // Таймаут для загрузки фото может быть больше
+                .build();
+
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+                .thenApply(response -> {
+                    if (response == null) {
+                        return null;
+                    }
+
+                    if (response.statusCode() == 200) {
+                        try (InputStream imageStream = response.body()) {
+                            return new Image(imageStream);
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    } else if (response.statusCode() == 404) {
+                        System.out.println("Фото для работника не найдено");
+                        return null;
+                    } else {
+                        showAlert("Ошибка сервера", "Не удалось загрузить фото сотрудника. Код ответа: " +
+                                response.statusCode());
+                        try {
+                            String errorBody = new String(response.body().readAllBytes());
+                            System.err.println("Тело ошибки от сервера: " + errorBody);
+                        } catch (IOException ioException) {
+                            throw new RuntimeException(ioException);
+                        }
+                        return null;
+                    }
+                })
+                .exceptionally(ex -> {
+                    // Обработка исключений при отправке запроса (например, нет соединения)
+                    System.err.println("Ошибка сети при запросе фото: " + ex.getMessage());
+                    return null;
+                });
+    }
+
+    // Метод для отправки фото работника на сервер
+    public static CompletableFuture<Boolean> uploadWorkerPhoto(Long workerId, File file) {
+        if (file == null || !file.exists()) {
+            showAlert("Ошибка", "Файл не найден или не выбран.");
+            return CompletableFuture.completedFuture(false);
+        }
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/workers/photo/" + workerId))
+                    .header("X-Session-Token", authToken)
+                    .header("Content-Type", "application/octet-stream") // указываем просто бинарный поток
+                    .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) return false;
+
+                        if (response.statusCode() == 200) {
+                            return true;
+                        } else {
+                            showAlert("Ошибка", "Не удалось загрузить фото. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return false;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
+        }
     }
 
     // Обновление работника
@@ -177,7 +273,6 @@ public class HttpService {
         }
     }
 
-    // Удаление работника
     public static CompletableFuture<Boolean> deleteWorker(Long id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/workers/" + id))
@@ -203,8 +298,6 @@ public class HttpService {
     public static CompletableFuture<List<Room>> getAllRooms() {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/rooms"))
-                .header("Content-Type", "application/json")
-                .header("X-Session-Token", authToken)
                 .GET()
                 .timeout(Duration.ofSeconds(15))
                 .build();
@@ -228,13 +321,10 @@ public class HttpService {
                 });
     }
 
-    public static CompletableFuture<List<WorkerRoomPair>> getAccessibleRooms(Long worker_id) {
+    public static CompletableFuture<List<AccessGroup>> getAllAccessGroups() {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/accesses/" + worker_id + "/rooms"))
-                .header("Content-Type", "application/json")
-                .header("X-Session-Token", authToken)
+                .uri(URI.create(BASE_URL + "/access"))
                 .GET()
-                .timeout(Duration.ofSeconds(15))
                 .build();
 
         return sendRequestAsync(request)
@@ -243,7 +333,7 @@ public class HttpService {
                         try {
                             return objectMapper.readValue(
                                     response.body(),
-                                    objectMapper.getTypeFactory().constructCollectionType(List.class, WorkerRoomPair.class)
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, AccessGroup.class)
                             );
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -256,90 +346,41 @@ public class HttpService {
                 });
     }
 
-    public static CompletableFuture<Boolean> setRoomsToWorker(Set<Long> rooms, Long worker_id) {
-        try {
-            String json = objectMapper.writeValueAsString(rooms);
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE_URL + "/accesses/" + worker_id))
-                    .header("Content-Type", "application/json")
-                    .header("X-Session-Token", authToken)  // Передаем токен
-                    .POST(HttpRequest.BodyPublishers.ofString(json))
-                    .build();
-
-            return sendRequestAsync(request)
-                    .thenApply(response -> {
-                        if (response == null)
-                            return false;
-
-                        if (response.statusCode() == 200) {
-                            return true;
-                        } else {
-                            showAlert("Ошибка", "Не удалось обновить доступные помещения. Код ответа: " +
-                                    response.statusCode() + "\n" + response.body());
-                            return false;
-                        }
-                    });
-        } catch (Exception e) {
-            e.printStackTrace();
-            return CompletableFuture.completedFuture(false);
-        }
-    }
-
-    public static CompletableFuture<Image> getWorkerPhoto(String photo_path) {
+    public static CompletableFuture<List<AccessGroup>> getWorkerGroups(Long workerId) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/workers/photo/" + photo_path))
-                .header("X-Session-Token", authToken)
+                .uri(URI.create(BASE_URL + "/access/worker/" + workerId + "/groups"))
                 .GET()
-                .timeout(Duration.ofSeconds(20)) // Таймаут для загрузки фото может быть больше
                 .build();
 
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+        return sendRequestAsync(request)
                 .thenApply(response -> {
-                    if (response == null) {
-                        return null;
-                    }
-
                     if (response.statusCode() == 200) {
-                        try (InputStream imageStream = response.body()) {
-                            return new Image(imageStream);
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    } else if (response.statusCode() == 404) {
-                        System.out.println("Фото для работника не найдено");
-                        return null;
-                    } else {
-                        showAlert("Ошибка сервера", "Не удалось загрузить фото сотрудника. Код ответа: " +
-                                response.statusCode());
                         try {
-                            String errorBody = new String(response.body().readAllBytes());
-                            System.err.println("Тело ошибки от сервера: " + errorBody);
-                        } catch (IOException ioException) {
-                            throw new RuntimeException(ioException);
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, AccessGroup.class)
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
                         }
-                        return null;
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
                     }
-                })
-                .exceptionally(ex -> {
-                    // Обработка исключений при отправке запроса (например, нет соединения)
-                    System.err.println("Ошибка сети при запросе фото" + ex.getMessage());
                     return null;
                 });
     }
 
-    public static CompletableFuture<Boolean> uploadWorkerPhoto(Long workerId, File file) {
-        if (file == null || !file.exists()) {
-            showAlert("Ошибка", "Файл не найден или не выбран.");
-            return CompletableFuture.completedFuture(false);
-        }
-
+    public static CompletableFuture<Boolean> updateWorkerGroups(Long workerId, List<AccessGroup> groups) {
         try {
+            List<Long> groupIds = groups.stream().map(AccessGroup::getId).toList();
+            String json = objectMapper.writeValueAsString(groupIds);
+
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(BASE_URL + "/workers/photo/" + workerId))
+                    .uri(URI.create(BASE_URL + "/access/worker/" + workerId + "/groups"))
+                    .header("Content-Type", "application/json")
                     .header("X-Session-Token", authToken)
-                    .header("Content-Type", "application/octet-stream") // указываем просто бинарный поток
-                    .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                     .build();
 
             return sendRequestAsync(request)
@@ -349,7 +390,7 @@ public class HttpService {
                         if (response.statusCode() == 200) {
                             return true;
                         } else {
-                            showAlert("Ошибка", "Не удалось загрузить фото. Код ответа: " +
+                            showAlert("Ошибка", "Не удалось обновить группы доступа. Код ответа: " +
                                     response.statusCode() + "\n" + response.body());
                             return false;
                         }

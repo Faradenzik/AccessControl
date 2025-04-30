@@ -13,7 +13,7 @@ import java.util.Objects;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Font.loadFont(getClass().getResourceAsStream("/fonts/jejugothic.ttf"), 14);
+        Font font = Font.loadFont(getClass().getResourceAsStream("/fonts/jejugothic.ttf"), 14);
         openAuthWindow(primaryStage);
     }
 

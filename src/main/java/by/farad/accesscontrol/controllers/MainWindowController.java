@@ -3,6 +3,7 @@ package by.farad.accesscontrol.controllers;
 import by.farad.accesscontrol.services.HttpService;
 import by.farad.accesscontrol.Main;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.AnchorPane;
@@ -21,12 +22,7 @@ public class MainWindowController {
     private void initialize() {
         Font.loadFont(getClass().getResourceAsStream("/fonts/jejugothic.ttf"), 14);
 
-        try {
-            AnchorPane journalPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/main_journal.fxml")));
-            rightPane.getChildren().setAll(journalPane);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        showMainJournal();
 
         Platform.runLater(() -> {
             Stage stage = (Stage) rightPane.getScene().getWindow();
@@ -55,6 +51,15 @@ public class MainWindowController {
         try {
             AnchorPane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers_list.fxml")));
             setContent(workersPane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showRoomsList() {
+        try {
+            AnchorPane roomsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/rooms_list.fxml")));
+            setContent(roomsPane);
         } catch (IOException e) {
             e.printStackTrace();
         }

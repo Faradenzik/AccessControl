@@ -1,15 +1,15 @@
 package by.farad.accesscontrol.controllers;
 
-import by.farad.accesscontrol.models.Room;
+import by.farad.accesscontrol.models.AccessGroup;
 import by.farad.accesscontrol.models.Worker;
-import by.farad.accesscontrol.models.WorkerRoomPair;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
@@ -18,13 +18,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class WorkerEditController {
 
     @FXML private ImageView photoView;
-    @FXML private TreeView<String> availableRoomsTree;
     @FXML private TextField nameField;
     @FXML private TextField surnameField;
     @FXML private TextField patronymicField;
@@ -33,17 +30,15 @@ public class WorkerEditController {
     @FXML private TextField phoneField;
     @FXML private TextField positionField;
     @FXML private TextField otdelField;
-    @FXML private TextField departmentField;
     @FXML private Button saveButton;
+    @FXML private Button saveAccessBtn;
     @FXML private Button cancelButton;
     @FXML private Button deleteButton;
-    @FXML private Button saveAccessBtn;
+    @FXML private ListView<String> groupsList;
 
+    private List<AccessGroup> allGroups = new ArrayList<>();
+    private final Map<AccessGroup, CheckBox> checkBoxMap = new HashMap<>();
     private File selectedFile = null;
-    private CompletableFuture<List<WorkerRoomPair>> accessibleFuture;
-    private CompletableFuture<List<Room>> allRoomsFuture;
-    private Set<Long> accessibleRoomIds = new HashSet<>();
-    private Set<Long> currentlySelectedRoomIds = new HashSet<>();
 
     private Worker worker;
     @Setter
@@ -54,8 +49,6 @@ public class WorkerEditController {
     public void setWorker(Worker worker) {
         this.worker = worker;
         fillForm();
-        accessibleFuture = HttpService.getAccessibleRooms(worker.getId());
-        initializeRoomTree();
     }
 
     @FXML
@@ -67,102 +60,45 @@ public class WorkerEditController {
         deleteButton.setOnAction(event -> deleteWorker());
     }
 
-    public void initializeRoomTree() {
-        allRoomsFuture = HttpService.getAllRooms();
+    @FXML
+    private void editAccess() {
+        saveAccessBtn.setVisible(true);
+        HttpService.getAllAccessGroups().thenAccept(groups -> {
+            Platform.runLater(() -> {
+                allGroups.clear();
+                allGroups.addAll(groups);
+                checkBoxMap.clear();
 
-        accessibleFuture.thenCombine(allRoomsFuture, (accessibleRooms, allRooms) -> {
-            accessibleRoomIds = accessibleRooms.stream()
-                    .map(WorkerRoomPair::getRoom_id)
-                    .collect(Collectors.toSet());
-            currentlySelectedRoomIds = new HashSet<>(accessibleRoomIds);
-            buildRoomTree(allRooms, false);
-            return null;
-        });
-    }
+                groupsList.getItems().clear();
 
-    private void buildRoomTree(List<Room> allRooms, boolean editMode) {
-        // Фильтрация комнат
-        List<Room> roomsToShow = allRooms.stream()
-                .filter(room -> editMode || accessibleRoomIds.contains(room.getId()))
-                .toList();
+                for (AccessGroup group : allGroups) {
+                    CheckBox checkBox = new CheckBox(group.getName());
 
-        // Создаем корневой элемент
-        TreeItem<String> root = new TreeItem<>("Доступные помещения");
-        root.setExpanded(true);
+                    // Проставляем флажок, если работник уже в этой группе
+                    boolean isSelected = worker.getGroups().stream()
+                            .anyMatch(g -> g.getId() == group.getId());
+                    checkBox.setSelected(isSelected);
 
-        // Группируем по этажам
-        Map<Integer, List<Room>> roomsByFloor = roomsToShow.stream()
-                .collect(Collectors.groupingBy(Room::getFloor));
-
-        // Заполняем дерево
-        roomsByFloor.forEach((floor, rooms) -> {
-            // Элемент этажа
-            TreeItem<String> floorItem = new TreeItem<>(floor + " этаж");
-            floorItem.setExpanded(true);
-
-            // Добавляем комнаты
-            rooms.forEach(room -> {
-                TreeItem<String> roomItem = new TreeItem<>(room.getName());
-
-                if (editMode) {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.setSelected(currentlySelectedRoomIds.contains(room.getId()));
-                    checkBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-                        if (newVal) {
-                            currentlySelectedRoomIds.add(room.getId());
-                        } else {
-                            currentlySelectedRoomIds.remove(room.getId());
-                        }
-                    });
-
-                    // Создаем графический элемент с CheckBox
-                    roomItem.setGraphic(new HBox(5, checkBox, new Label(room.getName())));
+                    checkBoxMap.put(group, checkBox);
+                    groupsList.getItems().add(group.getName()); // placeholder
                 }
 
-                floorItem.getChildren().add(roomItem);
-            });
-
-            root.getChildren().add(floorItem);
-        });
-
-        Platform.runLater(() -> {
-            availableRoomsTree.setRoot(root);
-            availableRoomsTree.setShowRoot(true);
-
-            // Устанавливаем кастомный CellFactory для правильного отображения
-            availableRoomsTree.setCellFactory(tv -> new TreeCell<>() {
-                @Override
-                protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-
-                    if (empty || item == null) {
-                        setText(null);
-                        setGraphic(null);
-                    } else {
-                        TreeItem<String> treeItem = getTreeItem();
-                        if (treeItem != null) {
-                            // Для элементов с CheckBox используем графическое представление
-                            if (treeItem.getGraphic() != null) {
-                                setText(null);
-                                setGraphic(treeItem.getGraphic());
-                            } else {
-                                setText(item);
-                                setGraphic(null);
+                // Переопределяем отображение элементов на чекбоксы
+                groupsList.setCellFactory(param -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setGraphic(null);
+                        } else {
+                            for (Map.Entry<AccessGroup, CheckBox> entry : checkBoxMap.entrySet()) {
+                                if (entry.getKey().getName().equals(item)) {
+                                    setGraphic(entry.getValue());
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-            });
-        });
-    }
-
-    @FXML
-    private void editAccess() {
-        allRoomsFuture.thenAccept(allRooms -> {
-            accessibleFuture.thenAccept(accessibleRooms -> {
-                Platform.runLater(() -> {
-                    saveAccessBtn.setVisible(true);
-                    buildRoomTree(allRooms, true);
                 });
             });
         });
@@ -170,17 +106,23 @@ public class WorkerEditController {
 
     @FXML
     private void saveAccess() {
-        // Только локальное обновление без сохранения на сервер
-        accessibleRoomIds = new HashSet<>(currentlySelectedRoomIds);
+        saveAccessBtn.setVisible(false);
+        List<AccessGroup> selectedGroups = new ArrayList<>();
+        for (Map.Entry<AccessGroup, CheckBox> entry : checkBoxMap.entrySet()) {
+            if (entry.getValue().isSelected()) {
+                selectedGroups.add(entry.getKey());
+            }
+        }
+        worker.setGroups(selectedGroups);
 
-        allRoomsFuture.thenAccept(allRooms -> {
-            accessibleFuture.thenAccept(accessibleRooms -> {
-                Platform.runLater(() -> {
-                    saveAccessBtn.setVisible(false);
-                    buildRoomTree(allRooms, false);
-                });
-            });
-        });
+        // Возвращаем отображение в обычный список
+        ObservableList<String> groupNames = FXCollections.observableArrayList();
+        for (AccessGroup group : selectedGroups) {
+            groupNames.add(group.getName());
+        }
+
+        groupsList.setCellFactory(null); // сбрасываем фабрику ячеек
+        groupsList.setItems(groupNames);
     }
 
     private void fillForm() {
@@ -193,15 +135,12 @@ public class WorkerEditController {
             phoneField.setText(worker.getPhone());
             positionField.setText(worker.getPosition());
             otdelField.setText(worker.getOtdel());
-            departmentField.setText(worker.getDepartment());
-            HttpService.getWorkerPhoto(worker.getPhoto_file())
-                    .thenAccept(loadedImage -> {
-                        Platform.runLater(() -> {
-                            if (loadedImage != null) {
-                                photoView.setImage(loadedImage);
-                            }
-                        });
-                    });
+            photoView.setImage(worker.getPhoto());
+            ObservableList<String> groupNames = FXCollections.observableArrayList();
+            for (AccessGroup group : worker.getGroups()) {
+                groupNames.add(group.getName());
+            }
+            groupsList.setItems(groupNames);
         }
     }
 
@@ -215,26 +154,31 @@ public class WorkerEditController {
         worker.setPhone(phoneField.getText());
         worker.setPosition(positionField.getText());
         worker.setOtdel(otdelField.getText());
-        worker.setDepartment(departmentField.getText());
 
-        HttpService.setRoomsToWorker(accessibleRoomIds, worker.getId());
         HttpService.updateWorker(worker).thenAccept(success -> {
             if (success) {
-                Platform.runLater(() -> {
-                    if (refreshCallback != null) {
-                        refreshCallback.run();
+                // 2. Загружаем фото, если выбрано
+                if (selectedFile != null) {
+                    HttpService.uploadWorkerPhoto(worker.getId(), selectedFile).thenAccept(uploadResult -> {
+                        if (uploadResult) {
+                            System.out.println("Фото загружено");
+                        }
+                    });
+                }
+
+                // 3. Отправляем список групп на сервер
+                HttpService.updateWorkerGroups(worker.getId(), worker.getGroups()).thenAccept(groupUpdateSuccess -> {
+                    if (groupUpdateSuccess) {
+                        Platform.runLater(() -> {
+                            if (refreshCallback != null) {
+                                refreshCallback.run();
+                            }
+                            stage.close();
+                        });
                     }
-                    stage.close();
                 });
             }
         });
-        if (selectedFile != null) {
-            HttpService.uploadWorkerPhoto(worker.getId(), selectedFile).thenAccept(uploadResult -> {
-                if (uploadResult) {
-                    System.out.println("загружено");
-                }
-            });
-        }
     }
 
     @FXML
