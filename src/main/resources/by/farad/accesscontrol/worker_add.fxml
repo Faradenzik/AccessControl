@@ -5,8 +5,8 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -92,9 +92,8 @@
                   <RowConstraints vgrow="SOMETIMES" />
                   <RowConstraints valignment="CENTER" />
               </rowConstraints>
-              <TreeView fx:id="availableRoomsTree" prefHeight="165.0" prefWidth="250.0" GridPane.rowIndex="1" />
-              <Label text="Доступные помещения" />
-            <Button mnemonicParsing="false" text="Настроить доступ" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+              <Label text="Группы доступа" />
+            <ListView fx:id="groupsList" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1" />
           </GridPane>
       </VBox>
    </center>

@@ -1,5 +1,6 @@
 package by.farad.accesscontrol.controllers;
 
+import by.farad.accesscontrol.models.AccessGroup;
 import by.farad.accesscontrol.models.Worker;
 import by.farad.accesscontrol.services.HttpService;
 import javafx.application.Platform;
@@ -14,9 +15,14 @@ import lombok.Setter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class WorkerAddController {
 
+    @FXML private ListView<String> groupsList;
     @FXML private ImageView photoView;
     @FXML private TextField nameField;
     @FXML private TextField surnameField;
@@ -32,6 +38,10 @@ public class WorkerAddController {
     private File selectedFile = null;
 
     private Worker worker;
+
+    private final Map<AccessGroup, CheckBox> checkBoxMap = new HashMap<>();
+    private final List<AccessGroup> allGroups = new ArrayList<>();
+
     @Setter
     private Runnable refreshCallback;
     @Setter
@@ -47,6 +57,42 @@ public class WorkerAddController {
 
         saveButton.setOnAction(event -> saveWorker());
         cancelButton.setOnAction(event -> stage.close());
+
+        loadAccessGroups();
+    }
+
+    private void loadAccessGroups() {
+        HttpService.getAllAccessGroups().thenAccept(groups -> {
+            Platform.runLater(() -> {
+                allGroups.clear();
+                allGroups.addAll(groups);
+                checkBoxMap.clear();
+                groupsList.getItems().clear();
+
+                for (AccessGroup group : allGroups) {
+                    CheckBox checkBox = new CheckBox(group.getName());
+                    checkBoxMap.put(group, checkBox);
+                    groupsList.getItems().add(group.getName()); // как placeholder
+                }
+
+                groupsList.setCellFactory(param -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setGraphic(null);
+                        } else {
+                            for (Map.Entry<AccessGroup, CheckBox> entry : checkBoxMap.entrySet()) {
+                                if (entry.getKey().getName().equals(item)) {
+                                    setGraphic(entry.getValue());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        });
     }
 
     @FXML
@@ -62,18 +108,28 @@ public class WorkerAddController {
 
         HttpService.addWorker(worker).thenAccept(workerId -> {
             if (workerId != null) {
-                Platform.runLater(() -> {
-                    if (refreshCallback != null) {
-                        refreshCallback.run();
+                // Загружаем фото
+                if (selectedFile != null) {
+                    HttpService.uploadWorkerPhoto(workerId, selectedFile).thenAccept(uploadResult -> {
+                        if (uploadResult) {
+                            System.out.println("Фото загружено");
+                        }
+                    });
+                }
+
+                // Сохраняем группы
+                List<AccessGroup> selectedGroups = new ArrayList<>();
+                for (Map.Entry<AccessGroup, CheckBox> entry : checkBoxMap.entrySet()) {
+                    if (entry.getValue().isSelected()) {
+                        selectedGroups.add(entry.getKey());
                     }
-                    stage.close();
-                    if (selectedFile != null) {
-                        HttpService.uploadWorkerPhoto(workerId, selectedFile).thenAccept(uploadResult -> {
-                            if (uploadResult) {
-                                System.out.println("загружено");
-                            }
-                        });
-                    }
+                }
+
+                HttpService.updateWorkerGroups(workerId, selectedGroups).thenAccept(groupsSaved -> {
+                    Platform.runLater(() -> {
+                        if (refreshCallback != null) refreshCallback.run();
+                        stage.close();
+                    });
                 });
             }
         });
@@ -82,34 +138,17 @@ public class WorkerAddController {
     public void uploadPhoto() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Выберите фотографию сотрудника");
-
-        // Устанавливаем фильтр для файлов (только JPG/JPEG)
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Изображения JPG", "*.jpg")
         );
 
-        // Показываем диалог выбора файла
         File selectedFile = fileChooser.showOpenDialog(stage);
-
         if (selectedFile != null) {
-            try {
-                // Загружаем изображение из файла
-                InputStream stream = new FileInputStream(selectedFile);
+            try (InputStream stream = new FileInputStream(selectedFile)) {
                 Image image = new Image(stream);
-
                 photoView.setImage(image);
-
                 this.selectedFile = selectedFile;
-
-                stream.close();
-
             } catch (Exception e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Ошибка");
-                alert.setHeaderText("Не удалось загрузить фотографию");
-                alert.setContentText(e.getMessage());
-                alert.showAndWait();
-
                 e.printStackTrace();
             }
         }
