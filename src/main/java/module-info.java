@@ -7,6 +7,7 @@ module by.farad.accesscontrol {
     exports by.farad.accesscontrol.models;
     requires com.fasterxml.jackson.databind;
     requires static lombok;
+    requires com.gluonhq.charm.glisten;
     exports by.farad.accesscontrol;
     exports by.farad.accesscontrol.controllers;
 

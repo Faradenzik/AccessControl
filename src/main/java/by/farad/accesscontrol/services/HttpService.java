@@ -1,6 +1,7 @@
 package by.farad.accesscontrol.services;
 
 import by.farad.accesscontrol.models.AccessGroup;
+import by.farad.accesscontrol.models.AccessTimeRange;
 import by.farad.accesscontrol.models.Room;
 import by.farad.accesscontrol.models.Worker;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,10 +13,7 @@ import javafx.scene.image.Image;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -399,6 +397,31 @@ public class HttpService {
             e.printStackTrace();
             return CompletableFuture.completedFuture(false);
         }
+    }
+
+    public static CompletableFuture<List<AccessTimeRange>> getAccessTimeRanges() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/access-ranges"))
+                .GET()
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, AccessTimeRange.class)
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных расписаний.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка сервера: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
+                });
     }
 
     // Метод для отправки асинхронных запросов

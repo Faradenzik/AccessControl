@@ -135,7 +135,8 @@ public class WorkerAddController {
         });
     }
 
-    public void uploadPhoto() {
+    @FXML
+    private void uploadPhoto() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Выберите фотографию сотрудника");
         fileChooser.getExtensionFilters().addAll(

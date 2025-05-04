@@ -3,7 +3,6 @@ package by.farad.accesscontrol.controllers;
 import by.farad.accesscontrol.services.HttpService;
 import by.farad.accesscontrol.Main;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.AnchorPane;
@@ -60,6 +59,15 @@ public class MainWindowController {
         try {
             AnchorPane roomsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/rooms_list.fxml")));
             setContent(roomsPane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showAccessRanges() {
+        try {
+            AnchorPane accessPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/access_ranges.fxml")));
+            setContent(accessPane);
         } catch (IOException e) {
             e.printStackTrace();
         }
