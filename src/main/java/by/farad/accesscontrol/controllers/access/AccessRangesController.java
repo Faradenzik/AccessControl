@@ -1,4 +1,4 @@
-package by.farad.accesscontrol.controllers;
+package by.farad.accesscontrol.controllers.access;
 
 import by.farad.accesscontrol.models.AccessTimeRange;
 import by.farad.accesscontrol.models.Room;
@@ -49,6 +49,17 @@ public class AccessRangesController {
 
     @FXML
     private void initialize() {
+        rangesTable.setRowFactory(tv -> {
+            TableRow<AccessTimeRange> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    AccessTimeRange range = row.getItem();
+                    openEditWindow(range);
+                }
+            });
+            return row;
+        });
+
         setupFloorTreeListener();
         loadRoomTree();
 
@@ -80,7 +91,7 @@ public class AccessRangesController {
                 return new SimpleStringProperty("Блокировка доступа");
             }
 
-            String[] dayNumbers = raw.split(",");
+            String[] dayNumbers = raw.split("");
             String formatted = Arrays.stream(dayNumbers)
                     .map(dayNames::get)
                     .filter(Objects::nonNull)
@@ -102,6 +113,26 @@ public class AccessRangesController {
         rangesTable.setItems(sortedRanges);
 
         loadAccessTimeRanges();
+    }
+
+    private void openEditWindow(AccessTimeRange range) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/access/range_edit.fxml"));
+            Parent root = loader.load();
+
+            RangeEditController controller = loader.getController();
+            controller.setRange(range);
+
+            Stage stage = new Stage();
+            stage.setTitle("Редактирование расписания");
+            stage.setScene(new Scene(root));
+            controller.setStage(stage);
+
+            stage.setOnHidden(e -> loadAccessTimeRanges());
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setupFloorTreeListener() {
@@ -161,7 +192,7 @@ public class AccessRangesController {
 
     public void addRule() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/range_add.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/access/range_add.fxml"));
             Parent root = loader.load();
 
             RangeAddController controller = loader.getController();

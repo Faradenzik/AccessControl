@@ -424,6 +424,58 @@ public class HttpService {
                 });
     }
 
+    public static CompletableFuture<Boolean> addAccessRange(AccessTimeRange access) {
+        try {
+            String json = objectMapper.writeValueAsString(access);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/access-ranges"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (!(response.statusCode() == 200 || response.statusCode() == 201)) {
+                            showAlert("Ошибка", "Не удалось добавить расписание. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                        return true;
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public static CompletableFuture<Boolean> deleteRange(Long id) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/access-ranges/" + id))
+                .header("X-Session-Token", authToken)
+                .DELETE()
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response == null)
+                        return false;
+
+                    if (response.statusCode() == 200) {
+                        return true;
+                    } else {
+                        showAlert("Ошибка", "Не удалось удалить расписание. Код ответа: " +
+                                response.statusCode() + "\n" + response.body());
+                        return false;
+                    }
+                });
+    }
+
     // Метод для отправки асинхронных запросов
     private static CompletableFuture<HttpResponse<String>> sendRequestAsync(HttpRequest request) {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())

@@ -1,4 +1,4 @@
-package by.farad.accesscontrol.controllers;
+package by.farad.accesscontrol.controllers.workers;
 
 import by.farad.accesscontrol.models.AccessGroup;
 import by.farad.accesscontrol.models.Worker;

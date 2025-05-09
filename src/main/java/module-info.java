@@ -12,4 +12,8 @@ module by.farad.accesscontrol {
     exports by.farad.accesscontrol.controllers;
 
     opens by.farad.accesscontrol.controllers to javafx.fxml;
+    exports by.farad.accesscontrol.controllers.access;
+    opens by.farad.accesscontrol.controllers.access to javafx.fxml;
+    exports by.farad.accesscontrol.controllers.workers;
+    opens by.farad.accesscontrol.controllers.workers to javafx.fxml;
 }

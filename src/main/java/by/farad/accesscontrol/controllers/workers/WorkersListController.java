@@ -1,4 +1,4 @@
-package by.farad.accesscontrol.controllers;
+package by.farad.accesscontrol.controllers.workers;
 
 import by.farad.accesscontrol.models.AccessGroup;
 import by.farad.accesscontrol.models.Worker;
@@ -112,7 +112,7 @@ public class WorkersListController implements Initializable {
 
     private void openEditWindow(Worker worker) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/worker_edit.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/workers/worker_edit.fxml"));
             Parent root = loader.load();
 
             WorkerEditController controller = loader.getController();
@@ -176,7 +176,7 @@ public class WorkersListController implements Initializable {
     @FXML
     public void addWorker() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/worker_add.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/by/farad/accesscontrol/workers/worker_add.fxml"));
             Parent root = loader.load();
 
             WorkerAddController controller = loader.getController();

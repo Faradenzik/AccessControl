@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.control.ToggleButtonGroup?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="380.0" prefWidth="311.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.access.RangeEditController">
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+   <bottom>
+   
+          <HBox alignment="CENTER_RIGHT" spacing="10" BorderPane.alignment="BOTTOM_RIGHT">
+           <Button fx:id="cancelButton" cancelButton="true" prefWidth="90.0" text="Отмена" />
+         <Button mnemonicParsing="false" onAction="#deleteRange" style="-fx-background-color: #ff4444; -fx-text-fill: white;" text="Удалить" />
+           <Button fx:id="saveButton" defaultButton="true" onAction="#saveRange" prefWidth="90.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Сохранить">
+            <HBox.margin>
+               <Insets />
+            </HBox.margin>
+         </Button>
+         <BorderPane.margin>
+            <Insets top="20.0" />
+         </BorderPane.margin>
+       </HBox>
+   </bottom>
+   <center>
+       <VBox spacing="15.0">
+           <GridPane maxWidth="1.7976931348623157E308">
+               <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <Label text="Помещение" />
+            <ChoiceBox fx:id="roomList" maxWidth="1.7976931348623157E308" GridPane.rowIndex="1" />
+           </GridPane>
+           <GridPane maxWidth="1.7976931348623157E308">
+               <columnConstraints>
+                   <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <ToggleButtonGroup maxWidth="1.7976931348623157E308" selectionType="SINGLE" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS">
+                   <ToggleButton fx:id="workerBtn" maxWidth="Infinity" onAction="#setWorkerBtn" text="Сотрудник" GridPane.hgrow="ALWAYS" />
+                   <ToggleButton fx:id="groupBtn" maxWidth="Infinity" onAction="#setGroupBtn" text="Группа" GridPane.hgrow="ALWAYS" />
+               </ToggleButtonGroup>
+               <ChoiceBox fx:id="listObj" maxWidth="1.7976931348623157E308" GridPane.rowIndex="1" />
+           </GridPane>
+           <GridPane maxWidth="1.7976931348623157E308">
+               <columnConstraints>
+                   <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" />
+               </rowConstraints>
+               <ToggleButtonGroup fx:id="days" maxWidth="1.7976931348623157E308" selectionType="MULTIPLE" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
+                   <ToggleButton fx:id="monday" maxWidth="1.7976931348623157E308" text="Пн" />
+                   <ToggleButton fx:id="tuesday" maxWidth="1.7976931348623157E308" text="Вт" />
+                   <ToggleButton fx:id="wednesday" text="Ср" />
+                   <ToggleButton fx:id="thursday" text="Чт" />
+                   <ToggleButton fx:id="friday" text="Пт" />
+                   <ToggleButton fx:id="saturday" text="Сб" />
+                   <ToggleButton fx:id="sunday" text="Вс" />
+               </ToggleButtonGroup>
+               <Label text="Дни недели" />
+           </GridPane>
+           <GridPane alignment="CENTER">
+               <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <Label text="Время" />
+               <HBox spacing="5.0" GridPane.rowIndex="1">
+                   <Label text="С" />
+                   <TextField fx:id="sh" minWidth="-Infinity" prefWidth="30.0" promptText="10" />
+                   <Label contentDisplay="CENTER" text=":" textAlignment="CENTER" />
+                   <TextField fx:id="sm" prefWidth="30.0" promptText="10" />
+               </HBox>
+               <HBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                   <Label text="По">
+                       <HBox.margin>
+                           <Insets right="5.0" />
+                       </HBox.margin>
+                   </Label>
+                   <TextField fx:id="eh" minWidth="-Infinity" prefWidth="30.0" promptText="10" />
+                   <Label contentDisplay="CENTER" text=":" textAlignment="CENTER" />
+                   <TextField fx:id="em" prefWidth="30.0" promptText="10" />
+               </HBox>
+           </GridPane>
+       </VBox>
+   </center>
+</BorderPane>

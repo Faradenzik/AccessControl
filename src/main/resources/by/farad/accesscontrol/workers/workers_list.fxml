@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane stylesheets="@styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.WorkersListController">
+<AnchorPane stylesheets="@../styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.workers.WorkersListController">
     <BorderPane style="-fx-background-color: #2A363B;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <left>
             <TreeView fx:id="treeView" style="-fx-background-color: #fecea8;" />

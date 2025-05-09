@@ -48,7 +48,7 @@ public class MainWindowController {
     // Показать список сотрудников
     public void showWorkersList() {
         try {
-            AnchorPane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers_list.fxml")));
+            AnchorPane workersPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/workers/workers_list.fxml")));
             setContent(workersPane);
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,7 +66,7 @@ public class MainWindowController {
 
     public void showAccessRanges() {
         try {
-            AnchorPane accessPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/access_ranges.fxml")));
+            AnchorPane accessPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/access/access_ranges.fxml")));
             setContent(accessPane);
         } catch (IOException e) {
             e.printStackTrace();
