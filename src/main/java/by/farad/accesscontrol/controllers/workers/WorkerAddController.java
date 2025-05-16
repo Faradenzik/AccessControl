@@ -28,6 +28,7 @@ public class WorkerAddController {
     @FXML private TextField surnameField;
     @FXML private TextField patronymicField;
     @FXML private ComboBox<String> sexComboBox;
+    @FXML private TextField passIdField;
     @FXML private DatePicker birthdayPicker;
     @FXML private TextField phoneField;
     @FXML private TextField positionField;
@@ -101,6 +102,7 @@ public class WorkerAddController {
         worker.setSurname(surnameField.getText());
         worker.setPatronymic(patronymicField.getText());
         worker.setSex(sexComboBox.getValue());
+        worker.setPassId(passIdField.getText());
         worker.setBirthday(birthdayPicker.getValue());
         worker.setPhone(phoneField.getText());
         worker.setPosition(positionField.getText());

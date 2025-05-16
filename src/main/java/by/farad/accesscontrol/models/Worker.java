@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 public class Worker {
-    private Long id ;
+    private Long id;
     private String name;
     private String surname;
     private String patronymic;
@@ -19,6 +19,7 @@ public class Worker {
     private String position;
     private String otdel;
     private String photoFile;
+    private String passId;
     @JsonIgnore
     private Image photo;
     @JsonIgnore

@@ -35,6 +35,7 @@ public class WorkerEditController {
     @FXML private Button cancelButton;
     @FXML private Button deleteButton;
     @FXML private ListView<String> groupsList;
+    @FXML private TextField passIdField;
 
     private List<AccessGroup> allGroups = new ArrayList<>();
     private final Map<AccessGroup, CheckBox> checkBoxMap = new HashMap<>();
@@ -131,6 +132,7 @@ public class WorkerEditController {
             surnameField.setText(worker.getSurname());
             patronymicField.setText(worker.getPatronymic());
             sexComboBox.setValue(worker.getSex());
+            passIdField.setText(worker.getPassId());
             birthdayPicker.setValue(worker.getBirthday());
             phoneField.setText(worker.getPhone());
             positionField.setText(worker.getPosition());
@@ -150,6 +152,7 @@ public class WorkerEditController {
         worker.setSurname(surnameField.getText());
         worker.setPatronymic(patronymicField.getText());
         worker.setSex(sexComboBox.getValue());
+        worker.setPassId(passIdField.getText());
         worker.setBirthday(birthdayPicker.getValue());
         worker.setPhone(phoneField.getText());
         worker.setPosition(positionField.getText());

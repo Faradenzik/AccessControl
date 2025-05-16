@@ -26,6 +26,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class WorkersListController implements Initializable {
+    @FXML private ChoiceBox<String> selectSex;
+    @FXML private ComboBox<String> selectPosition;
+    @FXML private ChoiceBox selectGroups;
+    @FXML private TextField sAge;
+    @FXML private TextField eAge;
     @FXML private TreeView<String> treeView;
     @FXML private TableView<Worker> workersTable;
     @FXML private TableColumn<Worker, Long> id;
@@ -44,6 +49,7 @@ public class WorkersListController implements Initializable {
     @FXML private Label otdelLbl;
     @FXML private Label positionLbl;
     @FXML private ListView<String> groupsList;
+    @FXML private Label passIdLbl;
 
     private final ObservableList<Worker> workersData = FXCollections.observableArrayList();
     private final FilteredList<Worker> filteredWorkers = new FilteredList<>(workersData, w -> true);
@@ -108,6 +114,8 @@ public class WorkersListController implements Initializable {
             groupNames.add(group.getName());
         }
         groupsList.setItems(groupNames);
+
+        passIdLbl.setText(worker.getPassId());
     }
 
     private void openEditWindow(Worker worker) {

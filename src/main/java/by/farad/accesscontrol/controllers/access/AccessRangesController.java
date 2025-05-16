@@ -139,10 +139,14 @@ public class AccessRangesController {
         floorTree.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 String selected = newVal.getValue();
-
+                label.setText("Расписание доступа в помещение: " + selected);
                 filteredRanges.setPredicate(range -> {
-                    if (selected.equals("Все помещения")) return true;
-                    if (selected.startsWith("Этаж ")) return selected.equals("Этаж " + range.getRoom().getFloor());
+                    if (selected.equals("Все помещения")) {
+                        return true;
+                    }
+                    if (selected.startsWith("Этаж ")) {
+                        return selected.equals("Этаж " + range.getRoom().getFloor());
+                    }
                     return selected.equals(range.getRoom().getName());
                 });
             }
@@ -202,6 +206,7 @@ public class AccessRangesController {
             stage.setScene(new Scene(root));
             controller.setStage(stage);
 
+            stage.setOnHidden(e -> loadAccessTimeRanges());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

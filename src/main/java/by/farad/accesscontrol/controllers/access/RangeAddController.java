@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -35,6 +36,7 @@ public class RangeAddController {
     @FXML private TextField eh;
     @FXML private TextField em;
     @FXML private ChoiceBox listObj;
+    @FXML private Button cancelButton;
 
     private final ObservableList<Room> rooms = FXCollections.observableArrayList();
     private final ObservableList<Worker> workers = FXCollections.observableArrayList();
@@ -43,11 +45,15 @@ public class RangeAddController {
     private AccessTimeRange group = new AccessTimeRange();
 
     @Setter
+    private Runnable refreshCallback;
+    @Setter
     private Stage stage;
 
 
     @FXML
     private void initialize() {
+        cancelButton.setOnAction(event -> stage.close());
+
         loadRooms();
         loadWorkers();
         loadGroups();
@@ -155,7 +161,12 @@ public class RangeAddController {
         group.setTimeStart(startTime);
         group.setTimeEnd(endTime);
 
-        HttpService.addAccessRange(group);
+        HttpService.addAccessRange(group).thenAccept(result -> {
+            Platform.runLater(() -> {
+                if (refreshCallback != null && result != null) refreshCallback.run();
+                stage.close();
+            });
+        });
     }
 
     @FXML

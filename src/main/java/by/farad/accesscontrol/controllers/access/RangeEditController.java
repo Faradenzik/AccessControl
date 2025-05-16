@@ -37,12 +37,11 @@ public class RangeEditController {
     @FXML private TextField eh;
     @FXML private TextField em;
     @FXML private ChoiceBox listObj;
+    @FXML private Button cancelButton;
 
     private final ObservableList<Room> rooms = FXCollections.observableArrayList();
     private final ObservableList<Worker> workers = FXCollections.observableArrayList();
     private final ObservableList<AccessGroup> allGroups = FXCollections.observableArrayList();
-
-    private AccessTimeRange group = new AccessTimeRange();
 
     @Setter
     private Stage stage;
@@ -84,6 +83,7 @@ public class RangeEditController {
 
     @FXML
     private void initialize() {
+        cancelButton.setOnAction(event -> stage.close());
         loadRooms();
         loadWorkers();
         loadGroups();
@@ -163,12 +163,12 @@ public class RangeEditController {
 
     @FXML
     private void saveRange () {
-        group.setRoom(roomList.getValue());
+        accessRange.setRoom(roomList.getValue());
 
         if (workerBtn.isSelected()) {
-            group.setWorker((Worker) listObj.getValue());
+            accessRange.setWorker((Worker) listObj.getValue());
         } else if (groupBtn.isSelected()) {
-            group.setGroup((AccessGroup) listObj.getValue());
+            accessRange.setGroup((AccessGroup) listObj.getValue());
         } /*TODO проверка на отсутствие*/
 
         StringBuilder daysOfWeek = new StringBuilder();
@@ -179,7 +179,7 @@ public class RangeEditController {
         if (friday.isSelected())    daysOfWeek.append("5");
         if (saturday.isSelected())  daysOfWeek.append("6");
         if (sunday.isSelected())    daysOfWeek.append("7");
-        group.setDaysOfWeek(daysOfWeek.toString());
+        accessRange.setDaysOfWeek(daysOfWeek.toString());
 
         int startH = Integer.parseInt(sh.getText());
         int startM = Integer.parseInt(sm.getText());
@@ -188,10 +188,15 @@ public class RangeEditController {
 
         LocalTime startTime = LocalTime.of(startH, startM);
         LocalTime endTime = LocalTime.of(endH, endM);
-        group.setTimeStart(startTime);
-        group.setTimeEnd(endTime);
+        accessRange.setTimeStart(startTime);
+        accessRange.setTimeEnd(endTime);
 
-        HttpService.addAccessRange(group);
+        HttpService.updateAccessRange(accessRange).thenAccept(result -> {
+            Platform.runLater(() -> {
+                if (refreshCallback != null && result != null) refreshCallback.run();
+                stage.close();
+            });
+        });
     }
 
     @FXML

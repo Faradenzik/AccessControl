@@ -1,9 +1,6 @@
 package by.farad.accesscontrol.services;
 
-import by.farad.accesscontrol.models.AccessGroup;
-import by.farad.accesscontrol.models.AccessTimeRange;
-import by.farad.accesscontrol.models.Room;
-import by.farad.accesscontrol.models.Worker;
+import by.farad.accesscontrol.models.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -306,8 +303,7 @@ public class HttpService {
                         try {
                             return objectMapper.readValue(
                                     response.body(),
-                                    objectMapper.getTypeFactory().constructCollectionType(List.class, Room.class)
-                            );
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, Room.class));
                         } catch (Exception e) {
                             e.printStackTrace();
                             showAlert("Ошибка", "Ошибка при обработке данных.");
@@ -454,6 +450,36 @@ public class HttpService {
         }
     }
 
+    public static CompletableFuture<Boolean> updateAccessRange(AccessTimeRange access) {
+        try {
+            String json = objectMapper.writeValueAsString(access);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/access-ranges/" + access.getId()))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (!(response.statusCode() == 200 || response.statusCode() == 201)) {
+                            showAlert("Ошибка", "Не удалось обновить расписание. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                        return true;
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
     public static CompletableFuture<Boolean> deleteRange(Long id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/access-ranges/" + id))
@@ -473,6 +499,33 @@ public class HttpService {
                                 response.statusCode() + "\n" + response.body());
                         return false;
                     }
+                });
+    }
+
+    public static CompletableFuture<List<MainJournal>> getMainJournal() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/main-journal"))
+                .header("Content-Type", "application/json")
+                .header("X-Session-Token", authToken)
+                .GET()
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, MainJournal.class));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
                 });
     }
 
