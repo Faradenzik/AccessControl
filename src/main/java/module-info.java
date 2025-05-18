@@ -8,6 +8,9 @@ module by.farad.accesscontrol {
     requires com.fasterxml.jackson.databind;
     requires static lombok;
     requires com.gluonhq.charm.glisten;
+    requires org.controlsfx.controls;
+    requires java.desktop;
+    requires spring.boot.autoconfigure;
     exports by.farad.accesscontrol;
     exports by.farad.accesscontrol.controllers;
 
@@ -16,4 +19,10 @@ module by.farad.accesscontrol {
     opens by.farad.accesscontrol.controllers.access to javafx.fxml;
     exports by.farad.accesscontrol.controllers.workers;
     opens by.farad.accesscontrol.controllers.workers to javafx.fxml;
+    exports by.farad.accesscontrol.controllers.rooms;
+    opens by.farad.accesscontrol.controllers.rooms to javafx.fxml;
+    exports by.farad.accesscontrol.controllers.groups;
+    opens by.farad.accesscontrol.controllers.groups to javafx.fxml;
+    exports by.farad.accesscontrol.controllers.users;
+    opens by.farad.accesscontrol.controllers.users to javafx.fxml;
 }

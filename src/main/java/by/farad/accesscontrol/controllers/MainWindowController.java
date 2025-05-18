@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -57,7 +58,7 @@ public class MainWindowController {
 
     public void showRoomsList() {
         try {
-            AnchorPane roomsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/rooms_list.fxml")));
+            AnchorPane roomsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/rooms/rooms_list.fxml")));
             setContent(roomsPane);
         } catch (IOException e) {
             e.printStackTrace();
@@ -68,6 +69,24 @@ public class MainWindowController {
         try {
             AnchorPane accessPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/access/access_ranges.fxml")));
             setContent(accessPane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showAccessGroups() {
+        try {
+            BorderPane groupsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/access_groups/workers_groups.fxml")));
+            setContent(groupsPane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showUsers() {
+        try {
+            BorderPane groupsPane = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/by/farad/accesscontrol/users/users_list.fxml")));
+            setContent(groupsPane);
         } catch (IOException e) {
             e.printStackTrace();
         }

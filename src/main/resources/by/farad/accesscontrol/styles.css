@@ -23,6 +23,15 @@ BorderPane {
     -fx-background-color: #2A363B;
 }
 
+#leftPanel {
+    -fx-background-color: #FECEA8;
+}
+
+#h1 {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
 /* Основные стили таблицы */
 .table-view {
     -fx-background-color: #2A363B;

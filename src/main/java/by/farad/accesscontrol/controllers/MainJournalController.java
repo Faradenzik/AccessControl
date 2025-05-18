@@ -36,8 +36,8 @@ public class MainJournalController implements Initializable {
     @FXML private TextField sm;
     @FXML private TextField eh;
     @FXML private TextField em;
-    @FXML private ChoiceBox selectStatus;
-    @FXML private ChoiceBox selectDirection;
+    @FXML private ChoiceBox<String> selectStatus;
+    @FXML private ChoiceBox<String> selectDirection;
     @FXML private ComboBox<String> selectRoom;
     @FXML private ComboBox<String> selectWorker;
     @FXML private ComboBox<String> selectOtdel;
@@ -89,8 +89,7 @@ public class MainJournalController implements Initializable {
         direction.setCellValueFactory(new PropertyValueFactory<>("direction"));
         description.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        loadJournalData();
-        journalTable.setItems(journalData);
+        loadData();
         setupFiltering();
     }
 
@@ -136,12 +135,12 @@ public class MainJournalController implements Initializable {
         eh.textProperty().addListener((obs, oldVal, newVal) -> filterJournal());
         em.textProperty().addListener((obs, oldVal, newVal) -> filterJournal());
 
-        selectStatus.setItems(FXCollections.observableArrayList("Не выбрано", "Успешно", "Заблокировано"));
-        selectStatus.setValue("Не выбрано");
+        selectStatus.setItems(FXCollections.observableArrayList("Все", "Успешно", "Заблокировано"));
+        selectStatus.setValue("Все");
         selectStatus.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> filterJournal());
 
-        selectDirection.setItems(FXCollections.observableArrayList("Не выбрано", "Вход", "Выход"));
-        selectDirection.setValue("Не выбрано");
+        selectDirection.setItems(FXCollections.observableArrayList("Все", "Вход", "Выход"));
+        selectDirection.setValue("Все");
         selectDirection.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> filterJournal());
 
         selectRoom.getEditor().textProperty().addListener((obs, oldVal, newVal) -> filterJournal());
@@ -163,9 +162,9 @@ public class MainJournalController implements Initializable {
         LocalTime startTime = parseTime(sh.getText(), sm.getText());
         LocalTime endTime = parseTime(eh.getText(), em.getText());
 
-        String selectedStatus = (String) selectStatus.getValue();
+        String selectedStatus = selectStatus.getValue();
 
-        String selectedDirection = (String) selectDirection.getValue();
+        String selectedDirection = selectDirection.getValue();
 
         String roomFilter = selectRoom.getEditor().getText().toLowerCase();
 
@@ -173,7 +172,9 @@ public class MainJournalController implements Initializable {
         String otdelFilter = selectOtdel.getEditor().getText().toLowerCase();
         String positionFilter = selectPosition.getEditor().getText().toLowerCase();
 
-        journalData.setAll(allJournalData.filtered(entry -> {
+        List<TableColumn<MainJournal, ?>> sortOrder = new ArrayList<>(journalTable.getSortOrder());
+
+        List<MainJournal> filtered = allJournalData.filtered(entry -> {
             Worker worker = entry.getWorker();
             String fio;
             String otdel;
@@ -214,19 +215,22 @@ public class MainJournalController implements Initializable {
             boolean matchesEndTime = endTime == null || !entryTime.isAfter(endTime);
 
             String status = entry.getStatus() != null ? entry.getStatus() : "";
-            boolean matchesStatus = selectedStatus.equals("Не выбрано") || status.equalsIgnoreCase(selectedStatus);
+            boolean matchesStatus = selectedStatus.equals("Все") || status.equalsIgnoreCase(selectedStatus);
 
             String direction = entry.getDirection() != null ? entry.getDirection() : "";
-            boolean matchesDirection = selectedDirection.equals("Не выбрано") || direction.equalsIgnoreCase(selectedDirection);
+            boolean matchesDirection = selectedDirection.equals("Все") || direction.equalsIgnoreCase(selectedDirection);
 
             return matchesFio && matchesOtdel && matchesPosition &&
                     matchesStartDate && matchesEndDate &&
                     matchesStartTime && matchesEndTime &&
                     matchesStatus && matchesDirection && matchesRoom;
-        }));
+        });
+
+        journalData.setAll(filtered);
+        journalTable.getSortOrder().setAll(sortOrder);
     }
 
-    public void loadJournalData() {
+    public void loadData() {
         HttpService.getMainJournal().thenAccept(journal -> {
             if (journal != null) {
                 Platform.runLater(() -> {
@@ -234,17 +238,16 @@ public class MainJournalController implements Initializable {
                     journalData.addAll(journal);
                     allJournalData.setAll(journal);
                     journalTable.setItems(journalData);
-                    initializeFilters(); // обновить списки работников, отделов, должностей и комнат
+                    initializeFilters();
                     filterJournal();
                 });
             }
         });
-
     }
 
     @FXML
     private void refreshData() {
-        loadJournalData();
+        loadData();
     }
 
     private LocalTime parseTime(String hourText, String minuteText) {

@@ -9,7 +9,6 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -19,16 +18,16 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import org.controlsfx.control.CheckComboBox?>
 
 <AnchorPane stylesheets="@../styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.workers.WorkersListController">
     <BorderPane style="-fx-background-color: #2A363B;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <left>
             <VBox alignment="TOP_CENTER" spacing="15.0" style="-fx-background-color: #fecea8;" BorderPane.alignment="TOP_CENTER">
-                <TreeView fx:id="treeView" style="-fx-background-color: #fecea8;" />
                 <GridPane hgap="10.0" vgap="5.0">
                     <columnConstraints>
                         <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" minWidth="10.0" />
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="210.0" />
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -40,7 +39,7 @@
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <VBox.margin>
-                        <Insets left="20.0" />
+                        <Insets left="20.0" top="20.0" />
                     </VBox.margin>
                     <padding>
                         <Insets right="20.0" />
@@ -54,17 +53,27 @@
                   <font>
                      <Font size="15.0" />
                   </font>
+                  <GridPane.margin>
+                     <Insets left="10.0" />
+                  </GridPane.margin>
                </Label>
+               <ComboBox fx:id="selectFIO" editable="true" maxWidth="210.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                     <Label text="Пол:" GridPane.rowIndex="2">
                         <font>
                             <Font size="15.0" />
                         </font>
+                  <padding>
+                     <Insets left="10.0" />
+                  </padding>
                     </Label>
                     <ChoiceBox fx:id="selectSex" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                     <Label text="Возраст:" GridPane.rowIndex="3">
                         <font>
                             <Font size="15.0" />
                         </font>
+                  <padding>
+                     <Insets left="10.0" />
+                  </padding>
                     </Label>
                     <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="5.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.vgrow="ALWAYS">
                         <Label text="От" />
@@ -76,21 +85,29 @@
                   <font>
                      <Font size="15.0" />
                   </font>
+                  <GridPane.margin>
+                     <Insets left="10.0" />
+                  </GridPane.margin>
                </Label>
+               <ComboBox fx:id="selectOtdel" editable="true" maxWidth="210.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                     <Label text="Должность:" GridPane.rowIndex="5">
                         <font>
                             <Font size="15.0" />
                         </font>
+                  <padding>
+                     <Insets left="10.0" />
+                  </padding>
                     </Label>
-                    <ComboBox fx:id="selectPosition" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                    <ComboBox fx:id="selectPosition" editable="true" maxWidth="210.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                     <Label text="Группы доступа:" GridPane.rowIndex="6">
                         <font>
                             <Font size="15.0" />
                         </font>
+                  <padding>
+                     <Insets left="10.0" />
+                  </padding>
                     </Label>
-                    <ChoiceBox fx:id="selectGroups" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-               <ComboBox editable="true" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-               <ComboBox editable="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+               <CheckComboBox fx:id="selectGroups" maxWidth="210.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                 </GridPane>
             </VBox>
         </left>

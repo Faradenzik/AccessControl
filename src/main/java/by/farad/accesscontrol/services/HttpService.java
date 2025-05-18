@@ -31,10 +31,6 @@ public class HttpService {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static String authToken;
 
-    private HttpService() {
-
-    }
-
     // Метод для авторизации, сохранение токена
     public static CompletableFuture<String> authenticateAsync(String login, String password) {
         String json = String.format("{\"login\": \"%s\", \"password\": \"%s\"}", login, password);
@@ -315,6 +311,94 @@ public class HttpService {
                 });
     }
 
+    public static CompletableFuture<Long> addRoom(Room room) {
+        try {
+            String json = objectMapper.writeValueAsString(room);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/rooms/"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (response.statusCode() == 200 || response.statusCode() == 201) {
+                            try {
+                                return Long.parseLong(response.body());
+                            } catch (NumberFormatException e) {
+                                showAlert("Ошибка", "Сервер вернул неверный ID помещения.");
+                                return null;
+                            }
+                        } else {
+                            showAlert("Ошибка", "Не удалось добавить помещение. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public static CompletableFuture<Boolean> updateRoom(Room room) {
+        try {
+            String json = objectMapper.writeValueAsString(room);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/rooms/" + room.getId()))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)  // Передаем токен
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null)
+                            return false;
+
+                        if (response.statusCode() == 200) {
+                            return true;
+                        } else {
+                            showAlert("Ошибка", "Не удалось обновить помещение. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return false;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    public static CompletableFuture<Boolean> deleteRoom(Long id) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/rooms/" + id))
+                .header("X-Session-Token", authToken)
+                .DELETE()
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response == null)
+                        return false;
+
+                    if (response.statusCode() == 200) {
+                        return true;
+                    } else {
+                        showAlert("Ошибка", "Не удалось удалить помещение. Код ответа: " +
+                                response.statusCode() + "\n" + response.body());
+                        return false;
+                    }
+                });
+    }
+
     public static CompletableFuture<List<AccessGroup>> getAllAccessGroups() {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/access"))
@@ -337,6 +421,94 @@ public class HttpService {
                         showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
                     }
                     return null;
+                });
+    }
+
+    public static CompletableFuture<Long> addGroup(AccessGroup group) {
+        try {
+            String json = objectMapper.writeValueAsString(group);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/access"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (response.statusCode() == 200 || response.statusCode() == 201) {
+                            try {
+                                return Long.parseLong(response.body());
+                            } catch (NumberFormatException e) {
+                                showAlert("Ошибка", "Сервер вернул неверный ID группы.");
+                                return null;
+                            }
+                        } else {
+                            showAlert("Ошибка", "Не удалось добавить группу. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public static CompletableFuture<Boolean> updateGroup(AccessGroup group) {
+        try {
+            String json = objectMapper.writeValueAsString(group);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/access/" + group.getId()))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (!(response.statusCode() == 200 || response.statusCode() == 201)) {
+                            showAlert("Ошибка", "Не удалось обновить расписание. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                        return true;
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public static CompletableFuture<Boolean> deleteGroup(AccessGroup group) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/access/" + group.getId()))
+                .header("X-Session-Token", authToken)
+                .DELETE()
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response == null)
+                        return false;
+
+                    if (response.statusCode() == 200) {
+                        return true;
+                    } else {
+                        showAlert("Ошибка", "Не удалось удалить группу. Код ответа: " +
+                                response.statusCode() + "\n" + response.body());
+                        return false;
+                    }
                 });
     }
 
@@ -526,6 +698,109 @@ public class HttpService {
                         showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
                     }
                     return null;
+                });
+    }
+
+    public static CompletableFuture<List<User>> getAllUsers() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/users"))
+                .GET()
+                .timeout(Duration.ofSeconds(15))
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        try {
+                            return objectMapper.readValue(
+                                    response.body(),
+                                    objectMapper.getTypeFactory().constructCollectionType(List.class, User.class));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert("Ошибка", "Ошибка при обработке данных.");
+                        }
+                    } else {
+                        showAlert("Ошибка", "Ошибка на сервере: " + response.statusCode() + " - " + response.body());
+                    }
+                    return null;
+                });
+    }
+
+    public static CompletableFuture<Integer> addUser(User user) {
+        try {
+            String json = objectMapper.writeValueAsString(user);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/users"))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response == null) {
+                            return null;
+                        }
+
+                        if (response.statusCode() == 200 || response.statusCode() == 201) {
+                            try {
+                                return response.statusCode();
+                            } catch (NumberFormatException e) {
+                                showAlert("Ошибка", "Сервер вернул неверный ID помещения.");
+                                return null;
+                            }
+                        } else {
+                            showAlert("Ошибка", "Не удалось добавить помещение. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                            return null;
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    public static CompletableFuture<Integer> updateUser(User user) {
+        try {
+            String json = objectMapper.writeValueAsString(user);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/users/" + user.getId()))
+                    .header("Content-Type", "application/json")
+                    .header("X-Session-Token", authToken)  // Передаем токен
+                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            return sendRequestAsync(request)
+                    .thenApply(response -> {
+                        if (response.statusCode() != 200) {
+                            showAlert("Ошибка", "Не удалось обновить пользователя. Код ответа: " +
+                                    response.statusCode() + "\n" + response.body());
+                        }
+                        return response.statusCode();
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static CompletableFuture<Integer> deleteUser(User user) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/users/" + user.getId()))
+                .header("X-Session-Token", authToken)
+                .DELETE()
+                .build();
+
+        return sendRequestAsync(request)
+                .thenApply(response -> {
+                    if (response.statusCode() != 200) {
+                        showAlert("Ошибка", "Не удалось удалить пользователя. Код ответа: " +
+                                response.statusCode() + "\n" + response.body());
+                    }
+                    return response.statusCode();
                 });
     }
 

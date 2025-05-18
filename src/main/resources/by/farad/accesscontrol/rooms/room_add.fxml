@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="330.0" prefWidth="270.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="by.farad.accesscontrol.controllers.rooms.RoomAddController">
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+   <bottom>
+   
+          <HBox alignment="CENTER_RIGHT" spacing="10" BorderPane.alignment="BOTTOM_RIGHT">
+           <Button fx:id="cancelButton" cancelButton="true" prefWidth="90.0" text="Отмена" />
+           <Button defaultButton="true" onAction="#saveRoom" prefWidth="90.0" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Сохранить">
+            <HBox.margin>
+               <Insets />
+            </HBox.margin>
+         </Button>
+         <BorderPane.margin>
+            <Insets top="20.0" />
+         </BorderPane.margin>
+       </HBox>
+   </bottom>
+   <center>
+       <VBox spacing="15.0">
+           <GridPane maxWidth="1.7976931348623157E308">
+               <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <Label text="Этаж" />
+            <Spinner fx:id="floorField" prefWidth="75.0" GridPane.rowIndex="1" />
+           </GridPane>
+           <GridPane maxWidth="1.7976931348623157E308">
+               <columnConstraints>
+                   <ColumnConstraints halignment="LEFT" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+            <Label text="Название" />
+            <TextField fx:id="nameField" GridPane.rowIndex="1" />
+           </GridPane>
+           <GridPane alignment="CENTER">
+               <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints fillHeight="false" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <Label text="Идентификатор считывателя" />
+            <TextField fx:id="deviceIdField" GridPane.rowIndex="1" />
+           </GridPane>
+       </VBox>
+   </center>
+</BorderPane>

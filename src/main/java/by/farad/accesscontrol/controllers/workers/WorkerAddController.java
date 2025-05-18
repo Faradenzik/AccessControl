@@ -33,30 +33,24 @@ public class WorkerAddController {
     @FXML private TextField phoneField;
     @FXML private TextField positionField;
     @FXML private TextField otdelField;
-    @FXML private Button saveButton;
     @FXML private Button cancelButton;
 
     private File selectedFile = null;
 
-    private Worker worker;
+    private Worker worker = new Worker();
 
     private final Map<AccessGroup, CheckBox> checkBoxMap = new HashMap<>();
     private final List<AccessGroup> allGroups = new ArrayList<>();
 
     @Setter
-    private Runnable refreshCallback;
+    private Runnable onChangeCallback;
     @Setter
     private Stage stage;
-
-    public void setWorker() {
-        this.worker = new Worker();
-    }
 
     @FXML
     private void initialize() {
         sexComboBox.getItems().addAll("Мужской", "Женский");
 
-        saveButton.setOnAction(event -> saveWorker());
         cancelButton.setOnAction(event -> stage.close());
 
         loadAccessGroups();
@@ -129,7 +123,7 @@ public class WorkerAddController {
 
                 HttpService.updateWorkerGroups(workerId, selectedGroups).thenAccept(groupsSaved -> {
                     Platform.runLater(() -> {
-                        if (refreshCallback != null) refreshCallback.run();
+                        onChangeCallback.run();
                         stage.close();
                     });
                 });
